@@ -48,9 +48,6 @@ type kill = {
 	distance: number;
 };
 
-const input =
-	'monte-vs-cloud9-m2-mirage\t163300-76561198975452660-5\nspirit-vs-themongolz-m1-mirage\t8900-76561199063238565-3';
-
 const formatKills = (kills: kill[]) => {
 	const out: string[][] = [];
 	kills.forEach((kill, index) => {
@@ -166,7 +163,7 @@ rl.question('Enter starting index:', (answer) => {
 
 rl.on('line', (line) => {
 	if (line === 'run') {
-		const res = main(input, startingindex);
+		const res = main(lines.join('\n'), startingindex);
 
 		fs.writeFile('output.txt', res, (err) => {
 			if (err) {
