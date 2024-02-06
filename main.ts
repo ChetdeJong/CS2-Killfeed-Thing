@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import readline from 'readline';
 
 type kill = {
 	id: number;
@@ -113,7 +114,7 @@ const getFrag = (values: string, kills: kill[], index: number) => {
 const parseDemo = (input: string, startIndex: number = 1) => {
 	const demoname = input.split('\t')[0];
 	const values = input.split('\t')[1].split(',');
-	const file = fs.readFileSync(path.join('./json', `${demoname}.json`), 'utf8');
+	const file = fs.readFileSync(path.resolve('./json', `${demoname}.json`), 'utf8');
 	const json = JSON.parse(file);
 
 	const kills: kill[] = json.kills;
@@ -128,20 +129,55 @@ const parseDemo = (input: string, startIndex: number = 1) => {
 	return out.map((frag) => frag.map((line) => line.join('\t')).join('\n')).join('\n');
 };
 
-const main = (input: string) => {
+const main = (input: string, startIndex: number = 1) => {
 	const demos = input.split('\n');
 	const out = demos.map((demo, index) => {
 		if (demo === '') return '';
-		return parseDemo(demo, index + 1);
+		return parseDemo(demo, index + startIndex);
 	});
 	return out.join('\n');
 };
-const res = main(input);
 
-fs.writeFile('output.txt', res, (err) => {
-	if (err) {
-		console.error('An error occurred:', err);
-	} else {
-		console.log('File written successfully.');
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
+});
+
+const lines: string[] = [];
+
+let startingindex: number;
+
+rl.question('Enter starting index:', (answer) => {
+	startingindex = parseInt(answer);
+	console.log('Starting index:', startingindex);
+	console.log('Paste demos data line by line, when done type "run" and press enter');
+	console.log('');
+	console.log('Data format: demoname    frag,frag,frag');
+	console.log('Frag format: tick-steamid-fragnum');
+	console.log(
+		'Example: monte-vs-cloud9-m2-mirage    163300-76561198975452660-5,163300-76561198975452660-5'
+	);
+	console.log('');
+	console.log('Note, there is tab between demoname and frags');
+	console.log('');
+	console.log('Dont forget to put .json files in json folder');
+	console.log('');
+});
+
+rl.on('line', (line) => {
+	if (line === 'run') {
+		const res = main(input, startingindex);
+
+		fs.writeFile('output.txt', res, (err) => {
+			if (err) {
+				console.error('An error occurred:', err);
+			} else {
+				console.log('Saved to output.txt');
+			}
+		});
+
+		rl.close();
 	}
+
+	lines.push(line);
 });
