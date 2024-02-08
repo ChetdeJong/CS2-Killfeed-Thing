@@ -12,6 +12,7 @@
 		"@types/node": "^20.11.16"
 	},
 	"dependencies": {
+		"@laihoe/demoparser2": "^0.17.2",
 		"ts-node": "^10.9.2"
 	}
 }
