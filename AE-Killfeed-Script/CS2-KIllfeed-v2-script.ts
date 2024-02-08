@@ -460,13 +460,13 @@ cutsbtn.onClick = function () {
 
 		precomp.opacity.setValueAtTime((inpoint - 1) / fps, 0);
 		precomp.opacity.setValueAtTime(inpoint / fps, 100);
-		precomp.opacity.setValueAtTime(outpoint / fps, 100);
-		precomp.opacity.setValueAtTime((outpoint + 1) / fps, 0);
+		precomp.opacity.setValueAtTime((outpoint - 1) / fps, 100);
+		precomp.opacity.setValueAtTime(outpoint / fps, 0);
 
 		blur_layer.opacity.setValueAtTime((inpoint - 1) / fps, 0);
 		blur_layer.opacity.setValueAtTime(inpoint / fps, 100);
-		blur_layer.opacity.setValueAtTime(outpoint / fps, 100);
-		blur_layer.opacity.setValueAtTime((outpoint + 1) / fps, 0);
+		blur_layer.opacity.setValueAtTime((outpoint - 1) / fps, 100);
+		blur_layer.opacity.setValueAtTime(outpoint / fps, 0);
 	}
 };
 
@@ -476,150 +476,176 @@ renderbtn.onClick = function () {
 };
 
 placebtn.onClick = function () {
-	progressbar1.value = 0;
-	let activecomp = app.project.activeItem;
-	// if the viewer is the comp viewer and isn't active
-	if (
-		app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
-		app.activeViewer.active == false
-	) {
-		// make active
-		app.activeViewer.setActive();
-		// if the new activeItem isn't the original activeItem, then it's the project panel
-		if (app.project.activeItem != activecomp) {
-			alert('Select composition.');
+	try {
+		progressbar1.value = 0;
+		let activecomp = app.project.activeItem;
+		// if the viewer is the comp viewer and isn't active
+		if (
+			app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
+			app.activeViewer.active == false
+		) {
+			// make active
+			app.activeViewer.setActive();
+			// if the new activeItem isn't the original activeItem, then it's the project panel
+			if (app.project.activeItem != activecomp) {
+				alert('Select composition.');
+				return;
+			}
+		}
+
+		let folder;
+		let files = [];
+		for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
+			let item = killfeedfolder.item(i);
+			if (item instanceof FolderItem && item.name === 'killfeed_files') {
+				folder = item;
+				for (let j = 1; j < folder.numItems; j++) {
+					let file = folder.item(j);
+					if (file instanceof FootageItem && file.name.indexOf('.png') !== -1) {
+						files.push(file);
+					}
+				}
+				break;
+			}
+		}
+		if (!folder) {
+			alert('killfeed_files folder not found');
 			return;
 		}
-	}
-
-	let folder;
-	let files = [];
-	for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
-		let item = killfeedfolder.item(i);
-		if (item instanceof FolderItem && item.name === 'killfeed_files') {
-			folder = item;
-			for (let j = 1; j < folder.numItems; j++) {
-				let file = folder.item(j);
-				if (file instanceof FootageItem && file.name.indexOf('.png') !== -1) {
-					files.push(file);
-				}
-			}
-			break;
+		if (files.length < 1) {
+			alert('no files found in killfeed_files folder');
+			return;
 		}
-	}
-	if (!folder) {
-		alert('killfeed_files folder not found');
-		return;
-	}
-	if (files.length < 1) {
-		alert('no files found in killfeed_files folder');
-		return;
-	}
 
-	const fps = (activecomp as CompItem).frameRate;
-	const rows: string[] = data.split('\n');
-	const increment = 100 / files.length;
+		const fps = (activecomp as CompItem).frameRate;
+		const rows: string[] = data.split('\n');
 
-	let layers: Layer[] = [];
-	let prevlayer;
-	// progressbar1.value += increment;
-	for (let i = 0; i < files.length; i++) {
-		progressbar1.value += increment;
-		win.update();
+		const filteredRows: string[][] = [];
 
-		const filename = (files as FootageItem[])[i].name.split('.')[0];
-		const fragnum = filename.split('_')[0];
-		const fragindex = filename.substr(filename.length - 1, 1);
+		for (let i = 1; i < rows.length; i++) {
+			const row = rows[i].split(',');
+			if (row[0] === 'FRAG') {
+				if (rows[i + 1].split(',')[10] === '' || rows[i + 1].split(',')[10] === undefined)
+					continue;
+				const frames = getFrames(rows[i + 1].split(',')[10], fps) - 1;
+				row.pop();
+				row.push(frames.toString());
+				filteredRows.push(row);
+				continue;
+			}
+			if (row[10] === '' || row[10] === undefined || row[10] === null) continue;
+			const frames = getFrames(row[10], fps);
+			row.pop();
+			row.push(frames.toString());
+			filteredRows.push(row);
+		}
+
+		const sortedRows = filteredRows.sort((a, b) => {
+			const rA = a[10];
+			const rB = b[10];
+			return parseInt(rA) - parseInt(rB);
+		});
+
+		const increment = 100 / sortedRows.length;
+
+		let layers: Layer[] = [];
+		let prevlayer;
+		// progressbar1.value += increment;
 		let localfragnum = '0';
-		for (let j = 1; j < rows.length; j++) {
-			const row = rows[j].split(',');
-
+		for (let i = 0; i < sortedRows.length; i++) {
+			progressbar1.value += increment;
+			win.update();
+			const row = sortedRows[i];
 			if (row[0] === 'FRAG') {
 				localfragnum = row[1];
 				continue;
 			}
 
+			if (row[10] === undefined || row[10] === '') continue;
+
 			if (Number(row[0]) < 1 || Number(row[0]) > 5) continue;
 
 			const localindex = row[0];
-			if (fragnum === localfragnum && fragindex === localindex) {
-				let time = row[10];
-				if (time === undefined || time === '') continue;
 
-				const frames = getFrames(time, fps);
+			for (let j = 0; j < files.length; j++) {
+				const filename = (files as FootageItem[])[j].name.split('.')[0];
+				const fragindex = filename.substr(filename.length - 1, 1);
+				const fragnum = filename.split('_')[0];
 
-				if (frames === null) continue;
+				if (fragnum === localfragnum && fragindex === localindex) {
+					const layer = (activecomp as CompItem).layers.add((files as FootageItem[])[j]);
+					layer.startTime = parseInt(row[10]) / fps;
 
-				const layer = (activecomp as CompItem).layers.add((files as FootageItem[])[i]);
-				layer.startTime = frames / fps;
+					layers.push(layer);
 
-				layers.push(layer);
-
-				if (prevlayer) {
-					(prevlayer as Layer).outPoint = frames / fps;
+					if (prevlayer) {
+						(prevlayer as Layer).outPoint = parseInt(row[10]) / fps;
+					}
+					prevlayer = layer;
+					break;
 				}
-				prevlayer = layer;
-				break;
 			}
 		}
+
+		if (layers.length === 0) return;
+
+		let layers_indexes = map(layers, (layer) => layer.index);
+
+		let precomp = (activecomp as CompItem).layers.precompose(
+			layers_indexes,
+			'killfeed_precomp',
+			true
+		);
+
+		let precomp_mask = (activecomp as CompItem).layer(precomp.name).duplicate();
+		precomp_mask.name = 'killfeed_precomp_mask';
+		precomp_mask.moveAfter((activecomp as CompItem).layer(2));
+
+		precomp_mask('Effects').addProperty('Matte Choker');
+		(
+			precomp_mask('Effects')
+				.property('Matte Choker')
+				.property('Geometric Softness 1') as Property
+		).setValue(0);
+
+		(precomp_mask('Effects').property('Matte Choker').property('Choke 1') as Property).setValue(
+			-40
+		);
+
+		(
+			precomp_mask('Effects')
+				.property('Matte Choker')
+				.property('Gray Level Softness 1') as Property
+		).setValue(0);
+
+		(
+			precomp_mask('Effects')
+				.property('Matte Choker')
+				.property('Gray Level Softness 2') as Property
+		).setValue(0);
+
+		let adjustment = (activecomp as CompItem).layers.addSolid(
+			[0, 0, 0],
+			'killfeed_blur',
+			(activecomp as CompItem).width,
+			(activecomp as CompItem).height,
+			1
+		);
+
+		adjustment.adjustmentLayer = true;
+
+		adjustment('Effects').addProperty('Gaussian Blur');
+
+		(
+			adjustment('Effects').property('Gaussian Blur').property('Blurriness') as Property
+		).setValue(50);
+
+		adjustment.moveAfter((activecomp as CompItem).layer(3));
+
+		adjustment.setTrackMatte(precomp_mask, TrackMatteType.ALPHA);
+	} catch (e) {
+		alert(e);
 	}
-
-	if (layers.length === 0) return;
-
-	let layers_indexes = map(layers, (layer) => layer.index);
-
-	let precomp = (activecomp as CompItem).layers.precompose(
-		layers_indexes,
-		'killfeed_precomp',
-		true
-	);
-
-	let precomp_mask = (activecomp as CompItem).layer(precomp.name).duplicate();
-	precomp_mask.name = 'killfeed_precomp_mask';
-	precomp_mask.moveAfter((activecomp as CompItem).layer(2));
-
-	precomp_mask('Effects').addProperty('Matte Choker');
-	(
-		precomp_mask('Effects')
-			.property('Matte Choker')
-			.property('Geometric Softness 1') as Property
-	).setValue(0);
-
-	(precomp_mask('Effects').property('Matte Choker').property('Choke 1') as Property).setValue(
-		-40
-	);
-
-	(
-		precomp_mask('Effects')
-			.property('Matte Choker')
-			.property('Gray Level Softness 1') as Property
-	).setValue(0);
-
-	(
-		precomp_mask('Effects')
-			.property('Matte Choker')
-			.property('Gray Level Softness 2') as Property
-	).setValue(0);
-
-	let adjustment = (activecomp as CompItem).layers.addSolid(
-		[0, 0, 0],
-		'killfeed_blur',
-		(activecomp as CompItem).width,
-		(activecomp as CompItem).height,
-		1
-	);
-
-	adjustment.adjustmentLayer = true;
-
-	adjustment('Effects').addProperty('Gaussian Blur');
-
-	(adjustment('Effects').property('Gaussian Blur').property('Blurriness') as Property).setValue(
-		50
-	);
-
-	adjustment.moveAfter((activecomp as CompItem).layer(3));
-
-	adjustment.setTrackMatte(precomp_mask, TrackMatteType.ALPHA);
 };
 
 win.center();
