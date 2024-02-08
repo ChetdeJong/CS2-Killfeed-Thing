@@ -51,3 +51,10 @@ It will generate `.csv` formatted with tabs, which you can paste to spreadsheet 
 ## 3) Get steam ids
 
 Same as previous, just follow instructions.
+
+# After Effects Template with script
+
+1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
+
+Detailed video tutorial:
+TBD

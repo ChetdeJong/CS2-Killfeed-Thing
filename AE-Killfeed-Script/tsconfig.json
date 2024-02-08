@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"module": "None",
+		"noLib": true,
+		"target": "ES3",
+		"checkJs": false,
+		"ignoreDeprecations": "5.0",
+		"strict": false,
+		"types": ["./types/22.0/index.d.ts", "./types/shared/global.d.ts"]
+	}
+}
