@@ -6,9 +6,6 @@ import { getFormattedKills, saveToCSV } from './utils';
 
 export const rootdir = './';
 
-// const testdemo = path.resolve('../demos', '87000_m0NESY_vertigo_dglshit.dem');
-// saveToCSV(getKillsFromPlayer(testdemo, { includedKills: [3] }));
-
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout

@@ -35,6 +35,9 @@ module.exports = {
 			patterns: [
 				{
 					from: path.resolve(__dirname, 'src', 'start.bat')
+				},
+				{
+					from: path.resolve(__dirname, 'README.md')
 				}
 			]
 		}),
@@ -44,7 +47,8 @@ module.exports = {
 			// pathPrefix: "dist",
 			pathMapper: function (assetPath) {
 				// put all .bat files in the root of the zip
-				if (assetPath.endsWith('.bat')) return path.basename(assetPath);
+				if (assetPath.endsWith('.bat') || assetPath.endsWith('.md'))
+					return path.basename(assetPath);
 				return path.join('dist', assetPath);
 			}
 		}),
