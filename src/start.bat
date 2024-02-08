@@ -1,2 +1,2 @@
-node main.js
+node ./dist/main.js
 pause

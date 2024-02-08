@@ -6,9 +6,10 @@
 			"request": "launch",
 			"name": "Launch Program",
 			"preLaunchTask": "tsc: build - tsconfig.json",
-			"program": "${workspaceFolder}/main.ts",
+			"program": "${workspaceFolder}/src/main.ts",
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
-			"sourceMaps": true
+			"sourceMaps": true,
+			"console": "integratedTerminal"
 		}
 	]
 }
