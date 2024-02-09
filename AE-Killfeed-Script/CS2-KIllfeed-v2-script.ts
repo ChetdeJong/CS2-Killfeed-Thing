@@ -449,10 +449,12 @@ cutsbtn.onClick = function () {
 	const data = readCSV(cuts);
 	const rows: string[] = data.split('\n');
 
+	progressbar1.value = 0;
 	const increment = 100 / rows.length;
 	progressbar1.value = increment;
 	for (let i = 1; i < rows.length; i++) {
 		progressbar1.value += increment;
+		win.update();
 		const row = rows[i].split(',');
 		const inpoint = getFrames(row[0], fps);
 		const outpoint = getFrames(row[1], fps);
