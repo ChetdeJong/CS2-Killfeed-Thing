@@ -59,14 +59,16 @@ export const parseDemo = (input: string, startIndex: number = 1) => {
 		out.push(frag);
 	});
 
-	return out.map((frag) => frag.map((line) => line.join('\t')).join('\n')).join('\n');
+	return out.map((frag) => frag.map((line) => line.join('\t')).join('\n'));
 };
 
 export const getKillfeed = (input: string, startIndex: number = 1) => {
 	const demos = input.split('\n');
 	const out = demos.map((demo, index) => {
 		if (demo === '') return '';
-		return parseDemo(demo, index + startIndex);
+		const res = parseDemo(demo, index + startIndex);
+		if (res.length > 1) startIndex = startIndex + res.length - 1;
+		return res.join('\n');
 	});
 	return out.join('\n');
 };
