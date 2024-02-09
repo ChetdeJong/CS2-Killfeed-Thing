@@ -135,11 +135,17 @@ export const getFormattedKills = (
 	}
 
 	for (const round in killsByRounds) {
-		const playerKills = params.steamid
-			? killsByRounds[round][params.steamid]
-			: getAllKills(killsByRounds[round], params);
+		let playerKills;
 
-		if (!playerKills) continue;
+		if (params.steamid) {
+			playerKills = killsByRounds[round][params.steamid];
+			if (!playerKills || playerKills.length === 0) continue;
+			if (!params.includedKills.includes(playerKills.length)) continue;
+		} else {
+			playerKills = getAllKills(killsByRounds[round], params);
+		}
+		if (!playerKills || playerKills.length === 0) continue;
+
 		const kills = playerKills.map((kill) => [
 			header.map_name,
 			(kill.total_rounds_played + 1).toString(),
@@ -150,8 +156,6 @@ export const getFormattedKills = (
 			kill.user_team_clan_name,
 			kill.user_name
 		]);
-		if (kills.length === 0) continue;
-		if (!params.includedKills.includes(kills.length)) continue;
 		frags.push(...kills, ['']);
 	}
 
