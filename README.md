@@ -1,6 +1,14 @@
-# CS2 Killfeed Parser
+# CS2 Killfeed Thing
 
-This script uses following parser https://github.com/LaihoE/demoparser
+Basically this is the package for making killfeed for CS2. It contains demo parser script and After Effects template + script.
+
+The parser script uses following parser https://github.com/LaihoE/demoparser
+
+If you want to parse demos, then you have to have [Node.js](https://nodejs.org/en/download/current) installed and added to `PATH`
+
+If some demo doesnt get parsed, then probably demo is corrupted or something wrong with parser, which is unlikely. Nothing I can do about it.
+
+Video tutorial: TBD
 
 In script there are 3 options:
 
@@ -50,11 +58,47 @@ It will generate `.csv` formatted with tabs, which you can paste to spreadsheet 
 
 ## 3) Get steam ids
 
-Same as previous, just follow instructions.
+Same as previous, just follow instructions. It will give you steam ids of players in selected demo.
 
-# After Effects Template with script
-
-1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
+# After Effects Killfeed Template with script
 
 Detailed video tutorial:
 TBD
+
+1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
+
+2. Import `CS2-KIllfeed-v2.aep` into project.
+
+3. Take out `CS2-KIllfeed` folder into root of your project.
+
+4. Copy spreadsheet https://docs.google.com/spreadsheets/d/1BZdVUo386uld1ZBmGNzcN43C-Auky3VDCb6OVf8olA4 and fill out using provided example in there.
+
+Important part to have `FRAG` indexes not duplicated and kills indexes as `1,2,3,4,5`. Then you have to validate weapons names. Take the cell from `Helper` sheet. You can either copy cell itself or copy it's validation thing. If you copy cell and start typing it will give you hints. If something doesnt work, then make sure you have United States locale selected in settings.
+
+5. Export as csv and name as `killfeed` and `cuts` accordingly.
+
+6. Import to root of project (`cuts` file is optional).
+
+7. Run the script `file > scripts > run script`
+
+8. If everything is done right, then you will see preview of `killfeed` content.
+
+9. Select resolution, dont forget to save your project and click `render` button.
+
+It will output files in `killfeed_resolution` folder next to your project. Since it's not actual render, but rather frame export, the progress bar doesnt reflect real-time export, so if you have a lot of these then you have to wait for all of them to appear and not to close After Effects before that.
+
+10. Now you have killfeed as png images and you can stop here if that's enough for you. Next steps are optional.
+
+11. If you provided correct timecodes in `killfeed.csv` then you can place on timeline. To do that you have to import pngs to to `killfeed_files` inside `CS2-KIllfeed` folder.
+
+12. Create composition.
+
+Important thing is to have same framerate as your project wherever from you exported timings. Otherwise they will not be placed correctly. Same goes for resolution. If you rendered `1080p` killfeed then you have to have `1080p` resolution. Otherwise you have to adjust it manually.
+
+13. Select composition, run script and press place. If everything done correctly it will place killfeed pngs according to provided `killfeed.csv` with timecodes. It will also create mask for bg blur. Then you can put your footage underneath and you'll get killfeed with blur like it's done in game.
+
+14. Same story goes for `cuts.csv`. It will essentially create keyframes on opacity property of both killfeed and it's blur layer.
+
+If you dont want to render your footage with killfeed in After Effects you can export killfeed only with alpha channel. To do so just enable track matte for your footage layer and select the same layer that is selected for track matte of blur layer. Then copy opacity keyframes to your footage layer. This will preserve blurred background.
+
+After that you should have only killfeed on transparent background, but with blurred content of your footage. Then just render it with alpha channel enabled.

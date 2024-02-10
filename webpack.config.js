@@ -38,17 +38,30 @@ module.exports = {
 				},
 				{
 					from: path.resolve(__dirname, 'README.md')
+				},
+				{
+					from: path.resolve(__dirname, 'LICENSE')
+				},
+				{
+					from: path.resolve(__dirname, 'AE-Killfeed-Script', 'CS2-KIllfeed-v2-script.js')
+				},
+				{
+					from: path.resolve(__dirname, 'AE-Killfeed-Script', 'CS2-KIllfeed-v2.aep')
 				}
 			]
 		}),
 		new ZipPlugin({
 			filename: `${packageJson.name}-${packageJson.version}.zip`,
 			path: path.resolve(__dirname, 'build'),
-			// pathPrefix: "dist",
 			pathMapper: function (assetPath) {
-				// put all .bat files in the root of the zip
-				if (assetPath.endsWith('.bat') || assetPath.endsWith('.md'))
+				if (
+					assetPath.endsWith('.bat') ||
+					assetPath.endsWith('.md') ||
+					assetPath.endsWith('.aep') ||
+					assetPath.includes('CS2-KIllfeed-v2-script')
+				)
 					return path.basename(assetPath);
+
 				return path.join('dist', assetPath);
 			}
 		}),

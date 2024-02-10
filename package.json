@@ -1,5 +1,5 @@
 {
-	"name": "cs2-killfeed-parser",
+	"name": "cs2-killfeed-thing",
 	"version": "0.0.1",
 	"description": "Parse demos for frags and get formatted output for killfeed template",
 	"scripts": {

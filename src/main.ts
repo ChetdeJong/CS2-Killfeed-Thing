@@ -42,6 +42,10 @@ const askForDemos = async (): Promise<string> => {
 	});
 };
 
+if (!fs.readdirSync(path.resolve(rootdir)).includes('demos')) {
+	console.log('demos folder not found, create it.');
+	process.exit(0);
+}
 const demos = fs.readdirSync(path.resolve(rootdir, 'demos'));
 if (demos.length === 0) {
 	console.log('No demos found in demos folder');
