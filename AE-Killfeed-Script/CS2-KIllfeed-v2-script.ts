@@ -202,7 +202,7 @@ function getFrames(timecode: string, fps: number) {
 	}
 }
 
-const win = new Window('dialog', 'CS2 Killfeed Maker', undefined, {
+const win = new Window('dialog', 'CS2 Killfeed v2.1', undefined, {
 	resizeable: false,
 	closeButton: false
 });
@@ -501,7 +501,7 @@ placebtn.onClick = function () {
 			let item = killfeedfolder.item(i);
 			if (item instanceof FolderItem && item.name === 'killfeed_files') {
 				folder = item;
-				for (let j = 1; j < folder.numItems; j++) {
+				for (let j = 1; j < folder.numItems + 1; j++) {
 					let file = folder.item(j);
 					if (file instanceof FootageItem && file.name.indexOf('.png') !== -1) {
 						files.push(file);
@@ -526,14 +526,15 @@ placebtn.onClick = function () {
 
 		for (let i = 1; i < rows.length; i++) {
 			const row = rows[i].split(',');
+			const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
 			if (row[0] === 'FRAG') {
-				if (rows[i + 1].split(',')[10] === '' || rows[i + 1].split(',')[10] === undefined)
+				if (nextRow && (nextRow[10] !== '' || nextRow[10] !== undefined)) {
+					const frames = getFrames(nextRow[10], fps) - 1;
+					row.pop();
+					row.push(frames.toString());
+					filteredRows.push(row);
 					continue;
-				const frames = getFrames(rows[i + 1].split(',')[10], fps) - 1;
-				row.pop();
-				row.push(frames.toString());
-				filteredRows.push(row);
-				continue;
+				}
 			}
 			if (row[10] === '' || row[10] === undefined || row[10] === null) continue;
 			const frames = getFrames(row[10], fps);
@@ -552,7 +553,6 @@ placebtn.onClick = function () {
 
 		let layers: Layer[] = [];
 		let prevlayer;
-		// progressbar1.value += increment;
 		let localfragnum = '0';
 		for (let i = 0; i < sortedRows.length; i++) {
 			progressbar1.value += increment;
