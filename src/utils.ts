@@ -116,6 +116,12 @@ export const getFormattedKills = (
 	}
 ) => {
 	const kills = getKills(demo);
+
+	if (!kills) {
+		console.log(`Kills were not parsed in demo ${demo}`);
+		return '';
+	}
+
 	const killsByRounds = getKillsByRound(kills);
 	const header: header = parseHeader(demo);
 

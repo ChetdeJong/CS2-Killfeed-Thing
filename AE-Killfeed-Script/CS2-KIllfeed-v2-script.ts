@@ -105,43 +105,6 @@ function findIndex(arr: string[], target: string) {
 	return index;
 }
 
-function processDeathnotices(data, comp: CompItem) {
-	try {
-		const rows: string[] = data.split('\n');
-		const increment = 100 / rows.length;
-		progressbar1.value += increment;
-		let filename = '';
-		for (let i = 1; i < rows.length; i++) {
-			progressbar1.value += increment;
-			win.update();
-			const row = rows[i].split(',');
-			if (row[0] === 'GROUP') {
-				filename = row[2] == '' || row[2] == undefined ? row[1] : `${row[1]}_${row[2]}`;
-				resetDeathnotices(comp);
-				continue;
-			}
-			if (Number(row[0]) < 1 || Number(row[0]) > 5) continue;
-			const rowObj: row = {
-				name: `${filename}_${row[0]}`,
-				index: row[0],
-				attacker_side: row[1] === 'T' ? '1' : '2',
-				attacker: row[2],
-				victim_side: row[3] === 'T' ? '1' : '2',
-				victim: row[4],
-				weapon: (findIndex(weapons, row[5]) + 1).toString(),
-				headshot: row[6] === 'TRUE' ? '1' : '0',
-				wallbang: row[7] === 'TRUE' ? '1' : '0',
-				noscope: row[8] === 'TRUE' ? '1' : '0',
-				smoke: row[9] === 'TRUE' ? '1' : '0',
-				frame: row[10]
-			};
-			setDeathnotice(comp, rowObj);
-		}
-	} catch (error) {
-		alert(error);
-	}
-}
-
 function setDeathnotice(comp: CompItem, row: row) {
 	const layer = comp.layer(row.index);
 	const layer_mask = comp.layer(`${row.index}_mask`);
@@ -197,459 +160,664 @@ function getFrames(timecode: string, fps: number) {
 		if (Number(timeArray[1]) !== 0) frames = frames + Number(timeArray[1]) * 60 * fps;
 		if (Number(timeArray[2]) !== 0) frames = frames + Number(timeArray[2]) * fps;
 
+		if (isNaN(frames)) throw new Error('Cant parse frames');
+
 		return frames;
 	} catch (error) {
 		return null;
 	}
 }
 
-const win = new Window('dialog', `CS2 Killfeed Script v${version}`, undefined, {
-	resizeable: false,
-	closeButton: false
-});
+function logger(logData: string, alertMessage: string) {
+	const date = new Date();
+	const current_date = `Date: ${date.toDateString()} Time: ${date.toTimeString()}`;
+	const logs = new File(`${app.project.file.path}/logs.txt`);
+	logs.open('w');
+	logs.write(`Logs date ${current_date}\n` + logData);
+	logs.close();
 
-win.preferredSize.width = 400;
-win.preferredSize.height = 300;
-win.orientation = 'column';
-win.alignChildren = 'center';
-win.spacing = 10;
-win.margins = 16;
-
-// MAIN
-// ====
-var main: Group = win.add('group', undefined, { name: 'main' });
-main.preferredSize.width = 400;
-main.orientation = 'column';
-main.alignChildren = 'fill';
-main.spacing = 10;
-main.margins = 0;
-
-var progressbar1: Progressbar = main.add('progressbar' as 'treeview', undefined, undefined, {
-	name: 'progressbar1'
-}) as any;
-progressbar1.maxvalue = 100;
-progressbar1.value = 0;
-progressbar1.preferredSize.width = 400;
-progressbar1.preferredSize.height = 15;
-// progressbar1.visible = false;
-
-// TOP
-// ===
-var top = main.add('group', undefined, { name: 'top' });
-top.orientation = 'row';
-top.alignChildren = ['center', 'center'];
-top.spacing = 10;
-top.margins = 0;
-
-var restext = top.add('statictext', undefined, undefined, { name: 'restext' });
-restext.text = 'Resolution';
-
-var res_array = ['1080p', '1440p', '2160p'];
-var res = top.add('dropdownlist', undefined, undefined, { name: 'res', items: res_array });
-res.selection = 1;
-res.preferredSize.width = 100;
-
-var renderbtn = top.add('button', undefined, 'Render', { name: 'renderbtn' });
-
-var placebtn = top.add('button', undefined, 'Place', { name: 'placebtn' });
-
-var cutsbtn = top.add('button', undefined, 'Do cuts', { name: 'cutsbtn' });
-
-var cancel = top.add('button', undefined, 'Quit', { name: 'cancel' });
-
-// MAIN
-// ====
-var divider1 = main.add('panel', undefined, undefined, { name: 'divider1' });
-divider1.alignment = 'fill';
-
-// WIN
-// ===
-
-var tpanel1 = main.add('tabbedpanel', undefined, undefined, { name: 'tpanel1' });
-tpanel1.alignChildren = 'fill';
-tpanel1.margins = 0;
-
-var tab1 = tpanel1.add('tab', undefined, undefined, { name: 'tab1' });
-tab1.text = 'Frags';
-tab1.orientation = 'column';
-tab1.spacing = 10;
-tab1.margins = 10;
-tab1.alignChildren = 'fill';
-
-var tab2 = tpanel1.add('tab', undefined, undefined, { name: 'tab2' });
-tab2.text = 'Cuts';
-tab2.orientation = 'column';
-tab2.spacing = 10;
-tab2.margins = 10;
-tab2.alignChildren = 'fill';
-
-var table = tab1.add('listbox', undefined, [], {
-	name: 'table',
-	numberOfColumns: 4
-});
-// table.preferredSize.width = 400;
-table.maximumSize.height = 300;
-table.active = false;
-table.alignment = 'fill';
-
-var tableCuts = tab2.add('listbox', undefined, [], {
-	name: 'table',
-	numberOfColumns: 2,
-	showHeaders: true,
-	columnTitles: ['In', 'Out']
-});
-// table.preferredSize.width = 400;
-tableCuts.preferredSize.height = 300;
-tableCuts.active = false;
-tableCuts.alignment = 'fill';
-
-let csv, comp_1080p, comp_1440p, comp_2160p, killfeedfolder;
-
-function getCuts() {
-	for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
-		let item = app.project.rootFolder.item(i);
-		if (item instanceof FootageItem && item.name === 'cuts.csv') {
-			return new File(item.file.toString());
-		}
-	}
-	return null;
+	alert(alertMessage);
 }
 
-tpanel1.onChange = function () {
-	if (
-		tpanel1.selection == null ||
-		(tpanel1.selection as any).text == null ||
-		(tpanel1.selection as any).text == 'Frags'
-	)
-		return;
-
-	const cuts = getCuts();
-
-	if (!cuts) {
-		alert('cuts.csv not found');
-		return;
-	}
-
-	tableCuts.removeAll();
-
-	const data = readCSV(cuts);
-	const rows: string[] = data.split('\n');
-
-	for (let i = 1; i < rows.length; i++) {
-		const row = rows[i].split(',');
-		const item = tableCuts.add('item', row[0]);
-		item.subItems[0].text = row[1];
-	}
-};
-
-for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
-	let item = app.project.rootFolder.item(i);
-	if (item instanceof FootageItem && item.name === 'killfeed.csv') {
-		csv = new File(item.file.toString());
-		break;
-	}
-}
-if (!csv) {
-	alert('killfeed.csv not found');
-	win.close();
-}
-
-for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
-	let item = app.project.rootFolder.item(i);
-	if (item instanceof FolderItem && item.name === 'CS2-Killfeed') {
-		killfeedfolder = item;
-		break;
-	}
-}
-if (!killfeedfolder) {
-	alert('project folder not found, should be CS2-Killfeed');
-	win.close();
-}
-
-for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
-	if (killfeedfolder.item(i) instanceof CompItem && killfeedfolder.item(i).name === '1920x1080') {
-		comp_1080p = killfeedfolder.item(i);
-	}
-	if (killfeedfolder.item(i) instanceof CompItem && killfeedfolder.item(i).name === '2560x1440') {
-		comp_1440p = killfeedfolder.item(i);
-	}
-	if (killfeedfolder.item(i) instanceof CompItem && killfeedfolder.item(i).name === '3840x2160') {
-		comp_2160p = killfeedfolder.item(i);
-	}
-}
-
-if (!comp_1080p) {
-	alert('1920x1080 comp not found');
-	win.close();
-}
-
-if (!comp_1440p) {
-	alert('2560x1440 comp not found');
-	win.close();
-}
-
-if (!comp_2160p) {
-	alert('3840x2160 comp not found');
-	win.close();
-}
-
-const data = readCSV(csv);
-const rows: string[] = data.split('\n');
-
-for (let i = 1; i < rows.length; i++) {
-	const row = rows[i].split(',');
-	if (row[0] === 'GROUP') {
-		table.add('item', row[2]);
-		continue;
-	}
-	const item = table.add('item', row[0]);
-	item.subItems[0].text = row[2];
-	item.subItems[1].text = row[5];
-	item.subItems[2].text = row[4];
-}
-
-function getComp(res: string) {
-	switch (res) {
-		case '1080p':
-			return comp_1080p;
-		case '1440p':
-			return comp_1440p;
-		case '2160p':
-			return comp_2160p;
-		default:
-			return comp_1440p;
-	}
-}
-
-cutsbtn.onClick = function () {
-	const cuts = getCuts();
-	if (!cuts) {
-		alert('cuts.csv not found');
-		return;
-	}
-
-	let activecomp = app.project.activeItem as CompItem;
-	// if the viewer is the comp viewer and isn't active
-	if (
-		app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
-		app.activeViewer.active == false
-	) {
-		// make active
-		app.activeViewer.setActive();
-		// if the new activeItem isn't the original activeItem, then it's the project panel
-		if (app.project.activeItem != activecomp) {
-			alert('Select composition.');
-			return;
-		}
-	}
-
-	const blur_layer = activecomp.layer('killfeed_blur');
-	const precomp = activecomp.layer('killfeed_precomp');
-
-	const fps = (activecomp as CompItem).frameRate;
-	const data = readCSV(cuts);
-	const rows: string[] = data.split('\n');
-
-	progressbar1.value = 0;
-	const increment = 100 / rows.length;
-	progressbar1.value = increment;
-	for (let i = 1; i < rows.length; i++) {
-		progressbar1.value += increment;
-		win.update();
-		const row = rows[i].split(',');
-		const inpoint = getFrames(row[0], fps);
-		const outpoint = getFrames(row[1], fps);
-		if (inpoint === null || outpoint === null) continue;
-
-		precomp.opacity.setValueAtTime((inpoint - 1) / fps, 0);
-		precomp.opacity.setValueAtTime(inpoint / fps, 100);
-		precomp.opacity.setValueAtTime((outpoint - 1) / fps, 100);
-		precomp.opacity.setValueAtTime(outpoint / fps, 0);
-
-		blur_layer.opacity.setValueAtTime((inpoint - 1) / fps, 0);
-		blur_layer.opacity.setValueAtTime(inpoint / fps, 100);
-		blur_layer.opacity.setValueAtTime((outpoint - 1) / fps, 100);
-		blur_layer.opacity.setValueAtTime(outpoint / fps, 0);
-	}
-};
-
-renderbtn.onClick = function () {
-	progressbar1.value = 0;
-	processDeathnotices(data, getComp(res.selection.toString()));
-};
-
-placebtn.onClick = function () {
+function mainEntry() {
 	try {
-		progressbar1.value = 0;
-		let activecomp = app.project.activeItem;
-		// if the viewer is the comp viewer and isn't active
-		if (
-			app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
-			app.activeViewer.active == false
-		) {
-			// make active
-			app.activeViewer.setActive();
-			// if the new activeItem isn't the original activeItem, then it's the project panel
-			if (app.project.activeItem != activecomp) {
-				alert('Select composition.');
-				return;
+		let skippedLines: string[] = [];
+		function processDeathnotices(data, comp: CompItem) {
+			try {
+				skippedLines = [];
+				const rows: string[] = data.split('\n');
+				const increment = 100 / rows.length;
+				progressbar1.value += increment;
+				let filename = '';
+				for (let i = 1; i < rows.length; i++) {
+					progressbar1.value += increment;
+					win.update();
+					const row = rows[i].split(',');
+					if (!row || !row[0] || !row[1] || row[0] === '' || row[1] === '') {
+						throw new Error(
+							`Missing GROUP prefix or GROUP index or kill index\nline:\n${row.join(
+								', '
+							)}\nAborting render...`
+						);
+					}
+					if (row[0] === 'GROUP') {
+						filename =
+							row[2] == '' || row[2] == undefined ? row[1] : `${row[1]}_${row[2]}`;
+						resetDeathnotices(comp);
+						continue;
+					}
+					if (Number(row[0]) < 1 || Number(row[0]) > 5) continue;
+					const isEmpty = [];
+					for (let j = 1; j < row.length - 1; j++) {
+						if (!row[j] || row[j] === '' || row[j] === undefined) isEmpty.push(j);
+					}
+					if (isEmpty.length > 0) {
+						skippedLines.push('Incomplete line:\n' + row.join(', '));
+						continue;
+					}
+
+					const weaponIndex = findIndex(weapons, row[5]);
+					if (weaponIndex === -1) {
+						skippedLines.push('Wrong weapon:\n' + row.join(', '));
+						continue;
+					}
+
+					const rowObj: row = {
+						name: `${filename}_${row[0]}`,
+						index: row[0],
+						attacker_side: row[1] === 'T' ? '1' : '2',
+						attacker: row[2],
+						victim_side: row[3] === 'T' ? '1' : '2',
+						victim: row[4],
+						weapon: (weaponIndex + 1).toString(),
+						headshot: row[6] === 'TRUE' ? '1' : '0',
+						wallbang: row[7] === 'TRUE' ? '1' : '0',
+						noscope: row[8] === 'TRUE' ? '1' : '0',
+						smoke: row[9] === 'TRUE' ? '1' : '0',
+						frame: row[10]
+					};
+					setDeathnotice(comp, rowObj);
+				}
+				if (skippedLines.length > 0) {
+					logger(
+						`Skipped lines:\n\n${skippedLines.join('\n\n')}`,
+						'Few lines were skipped, probably some typo or missing (wrong) data\nCheck logs.txt file, which is located next to project file.'
+					);
+				}
+			} catch (error) {
+				if (error instanceof Error) {
+					logger(
+						'Render function error:\n' +
+							`${error.description}\n` +
+							`${error.toString()}\n` +
+							error.toSource(),
+						'Uncaught error in Render function\nCheck log.txt'
+					);
+				} else {
+					alert(error);
+				}
 			}
 		}
+		const win = new Window('dialog', `CS2 Killfeed Script v${version}`, undefined, {
+			resizeable: false,
+			closeButton: false
+		});
 
-		let folder;
-		let files = [];
-		for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
-			let item = killfeedfolder.item(i);
-			if (item instanceof FolderItem && item.name === 'killfeed_files') {
-				folder = item;
-				for (let j = 1; j < folder.numItems + 1; j++) {
-					let file = folder.item(j);
-					if (file instanceof FootageItem && file.name.indexOf('.png') !== -1) {
-						files.push(file);
-					}
+		win.preferredSize.width = 400;
+		win.preferredSize.height = 300;
+		win.orientation = 'column';
+		win.alignChildren = 'center';
+		win.spacing = 10;
+		win.margins = 16;
+
+		// MAIN
+		// ====
+		var main: Group = win.add('group', undefined, { name: 'main' });
+		main.preferredSize.width = 400;
+		main.orientation = 'column';
+		main.alignChildren = 'fill';
+		main.spacing = 10;
+		main.margins = 0;
+
+		var progressbar1: Progressbar = main.add(
+			'progressbar' as 'treeview',
+			undefined,
+			undefined,
+			{
+				name: 'progressbar1'
+			}
+		) as any;
+		progressbar1.maxvalue = 100;
+		progressbar1.value = 0;
+		progressbar1.preferredSize.width = 400;
+		progressbar1.preferredSize.height = 15;
+		// progressbar1.visible = false;
+
+		// TOP
+		// ===
+		var top = main.add('group', undefined, { name: 'top' });
+		top.orientation = 'row';
+		top.alignChildren = ['center', 'center'];
+		top.spacing = 10;
+		top.margins = 0;
+
+		var restext = top.add('statictext', undefined, undefined, { name: 'restext' });
+		restext.text = 'Resolution';
+
+		var res_array = ['1080p', '1440p', '2160p'];
+		var res = top.add('dropdownlist', undefined, undefined, { name: 'res', items: res_array });
+		res.selection = 1;
+		res.preferredSize.width = 100;
+
+		var renderbtn = top.add('button', undefined, 'Render', { name: 'renderbtn' });
+
+		var placebtn = top.add('button', undefined, 'Place', { name: 'placebtn' });
+
+		var cutsbtn = top.add('button', undefined, 'Do cuts', { name: 'cutsbtn' });
+
+		var cancel = top.add('button', undefined, 'Quit', { name: 'cancel' });
+
+		// MAIN
+		// ====
+		var divider1 = main.add('panel', undefined, undefined, { name: 'divider1' });
+		divider1.alignment = 'fill';
+
+		// WIN
+		// ===
+
+		var tpanel1 = main.add('tabbedpanel', undefined, undefined, { name: 'tpanel1' });
+		tpanel1.alignChildren = 'fill';
+		tpanel1.margins = 0;
+
+		var tab1 = tpanel1.add('tab', undefined, undefined, { name: 'tab1' });
+		tab1.text = 'Frags';
+		tab1.orientation = 'column';
+		tab1.spacing = 10;
+		tab1.margins = 10;
+		tab1.alignChildren = 'fill';
+
+		var tab2 = tpanel1.add('tab', undefined, undefined, { name: 'tab2' });
+		tab2.text = 'Cuts';
+		tab2.orientation = 'column';
+		tab2.spacing = 10;
+		tab2.margins = 10;
+		tab2.alignChildren = 'fill';
+
+		var table = tab1.add('listbox', undefined, [], {
+			name: 'table',
+			numberOfColumns: 4
+		});
+		// table.preferredSize.width = 400;
+		table.maximumSize.height = 300;
+		table.active = false;
+		table.alignment = 'fill';
+
+		var tableCuts = tab2.add('listbox', undefined, [], {
+			name: 'table',
+			numberOfColumns: 2,
+			showHeaders: true,
+			columnTitles: ['In', 'Out']
+		});
+		// table.preferredSize.width = 400;
+		tableCuts.preferredSize.height = 300;
+		tableCuts.active = false;
+		tableCuts.alignment = 'fill';
+
+		let csv, comp_1080p, comp_1440p, comp_2160p, killfeedfolder;
+
+		function getCuts() {
+			for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
+				let item = app.project.rootFolder.item(i);
+				if (item instanceof FootageItem && item.name === 'cuts.csv') {
+					return new File(item.file.toString());
 				}
+			}
+			return null;
+		}
+
+		tpanel1.onChange = function () {
+			if (
+				tpanel1.selection == null ||
+				(tpanel1.selection as any).text == null ||
+				(tpanel1.selection as any).text == 'Frags'
+			)
+				return;
+
+			const cuts = getCuts();
+
+			if (!cuts) {
+				alert('cuts.csv not found');
+				return;
+			}
+
+			tableCuts.removeAll();
+
+			const data = readCSV(cuts);
+			const rows: string[] = data.split('\n');
+
+			for (let i = 1; i < rows.length; i++) {
+				const row = rows[i].split(',');
+				const item = tableCuts.add('item', row[0]);
+				item.subItems[0].text = row[1];
+			}
+		};
+
+		for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
+			let item = app.project.rootFolder.item(i);
+			if (item instanceof FootageItem && item.name === 'killfeed.csv') {
+				csv = new File(item.file.toString());
 				break;
 			}
 		}
-		if (!folder) {
-			alert('killfeed_files folder not found');
-			return;
-		}
-		if (files.length < 1) {
-			alert('no files found in killfeed_files folder');
-			return;
+		if (!csv) {
+			alert('killfeed.csv not found');
+			win.close();
 		}
 
-		const fps = (activecomp as CompItem).frameRate;
+		for (let i = 1; i < app.project.rootFolder.numItems + 1; i++) {
+			let item = app.project.rootFolder.item(i);
+			if (item instanceof FolderItem && item.name === 'CS2-Killfeed') {
+				killfeedfolder = item;
+				break;
+			}
+		}
+		if (!killfeedfolder) {
+			alert('project folder not found, should be CS2-Killfeed');
+			win.close();
+		}
+
+		for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
+			if (
+				killfeedfolder.item(i) instanceof CompItem &&
+				killfeedfolder.item(i).name === '1920x1080'
+			) {
+				comp_1080p = killfeedfolder.item(i);
+			}
+			if (
+				killfeedfolder.item(i) instanceof CompItem &&
+				killfeedfolder.item(i).name === '2560x1440'
+			) {
+				comp_1440p = killfeedfolder.item(i);
+			}
+			if (
+				killfeedfolder.item(i) instanceof CompItem &&
+				killfeedfolder.item(i).name === '3840x2160'
+			) {
+				comp_2160p = killfeedfolder.item(i);
+			}
+		}
+
+		if (!comp_1080p) {
+			alert('1920x1080 comp not found');
+			win.close();
+		}
+
+		if (!comp_1440p) {
+			alert('2560x1440 comp not found');
+			win.close();
+		}
+
+		if (!comp_2160p) {
+			alert('3840x2160 comp not found');
+			win.close();
+		}
+
+		const data = readCSV(csv);
 		const rows: string[] = data.split('\n');
-
-		const filteredRows: string[][] = [];
 
 		for (let i = 1; i < rows.length; i++) {
 			const row = rows[i].split(',');
-			const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
 			if (row[0] === 'GROUP') {
-				if (nextRow && (nextRow[10] !== '' || nextRow[10] !== undefined)) {
-					const frames = getFrames(nextRow[10], fps) - 1;
+				table.add('item', row[2]);
+				continue;
+			}
+			const item = table.add('item', row[0]);
+			item.subItems[0].text = row[2];
+			item.subItems[1].text = row[5];
+			item.subItems[2].text = row[4];
+		}
+
+		function getComp(res: string) {
+			switch (res) {
+				case '1080p':
+					return comp_1080p;
+				case '1440p':
+					return comp_1440p;
+				case '2160p':
+					return comp_2160p;
+				default:
+					return comp_1440p;
+			}
+		}
+
+		cutsbtn.onClick = function () {
+			try {
+				skippedLines = [];
+				const cuts = getCuts();
+				if (!cuts) {
+					alert('cuts.csv not found');
+					return;
+				}
+
+				let activecomp = app.project.activeItem as CompItem;
+				// if the viewer is the comp viewer and isn't active
+				if (
+					app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
+					app.activeViewer.active == false
+				) {
+					// make active
+					app.activeViewer.setActive();
+					// if the new activeItem isn't the original activeItem, then it's the project panel
+					if (app.project.activeItem != activecomp) {
+						alert('Select composition.');
+						return;
+					}
+				}
+
+				const blur_layer = activecomp.layer('killfeed_blur');
+				const precomp = activecomp.layer('killfeed_precomp');
+
+				if (!blur_layer || !precomp) {
+					logger(
+						'Cant find killfeed_precomp or killfeed_blur\nComposition name: ' +
+							activecomp.name,
+						'Cant find killfeed_precomp or killfeed_blur'
+					);
+
+					return;
+				}
+
+				const fps = (activecomp as CompItem).frameRate;
+				const data = readCSV(cuts);
+				const rows: string[] = data.split('\n');
+
+				progressbar1.value = 0;
+				const increment = 100 / rows.length;
+				progressbar1.value = increment;
+				for (let i = 1; i < rows.length; i++) {
+					progressbar1.value += increment;
+					win.update();
+					const row = rows[i].split(',');
+					const inpoint = getFrames(row[0], fps);
+					const outpoint = getFrames(row[1], fps);
+					if (inpoint === null || outpoint === null) {
+						skippedLines.push('Cant parse timecode:\n' + row.join(', '));
+						continue;
+					}
+
+					precomp.opacity.setValueAtTime((inpoint - 1) / fps, 0);
+					precomp.opacity.setValueAtTime(inpoint / fps, 100);
+					precomp.opacity.setValueAtTime((outpoint - 1) / fps, 100);
+					precomp.opacity.setValueAtTime(outpoint / fps, 0);
+
+					blur_layer.opacity.setValueAtTime((inpoint - 1) / fps, 0);
+					blur_layer.opacity.setValueAtTime(inpoint / fps, 100);
+					blur_layer.opacity.setValueAtTime((outpoint - 1) / fps, 100);
+					blur_layer.opacity.setValueAtTime(outpoint / fps, 0);
+				}
+				if (skippedLines.length > 0) {
+					logger(
+						`Skipped lines:\n\n${skippedLines.join('\n\n')}`,
+						'Few lines were skipped\nCheck logs.txt file, which is located next to project file.'
+					);
+				}
+				alert(`Added opacity keyframes to ${precomp.name} and ${blur_layer.name}`);
+			} catch (error) {
+				if (error instanceof Error) {
+					logger(
+						'Cuts function error:\n' +
+							`${error.description}\n` +
+							`${error.toString()}\n` +
+							error.toSource(),
+						'Uncaught error in Cuts function\nCheck log.txt'
+					);
+				} else {
+					alert(error);
+				}
+			}
+		};
+
+		renderbtn.onClick = function () {
+			progressbar1.value = 0;
+			processDeathnotices(data, getComp(res.selection.toString()));
+			alert(
+				`Exported files to:\n${app.project.file.path}/killfeed_${
+					getComp(res.selection.toString()).name
+				}`
+			);
+		};
+
+		placebtn.onClick = function () {
+			try {
+				skippedLines = [];
+				progressbar1.value = 0;
+				let activecomp = app.project.activeItem;
+				// if the viewer is the comp viewer and isn't active
+				if (
+					app.activeViewer.type == ViewerType.VIEWER_COMPOSITION &&
+					app.activeViewer.active == false
+				) {
+					// make active
+					app.activeViewer.setActive();
+					// if the new activeItem isn't the original activeItem, then it's the project panel
+					if (app.project.activeItem != activecomp) {
+						alert('Select composition.');
+						return;
+					}
+				}
+
+				let folder;
+				let files = [];
+				for (let i = 1; i < killfeedfolder.numItems + 1; i++) {
+					let item = killfeedfolder.item(i);
+					if (item instanceof FolderItem && item.name === 'killfeed_files') {
+						folder = item;
+						for (let j = 1; j < folder.numItems + 1; j++) {
+							let file = folder.item(j);
+							if (file instanceof FootageItem && file.name.indexOf('.png') !== -1) {
+								files.push(file);
+							}
+						}
+						break;
+					}
+				}
+				if (!folder) {
+					alert('killfeed_files folder not found');
+					return;
+				}
+				if (files.length < 1) {
+					alert('no files found in killfeed_files folder');
+					return;
+				}
+
+				const fps = (activecomp as CompItem).frameRate;
+				const rows: string[] = data.split('\n');
+				const filteredRows: string[][] = [];
+
+				for (let i = 1; i < rows.length; i++) {
+					const row = rows[i].split(',');
+					const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
+					if (row[0] === 'GROUP') {
+						if (nextRow && (nextRow[10] !== '' || nextRow[10] !== undefined)) {
+							const frames = getFrames(nextRow[10], fps);
+							if (frames === null) {
+								skippedLines.push('Cant parse timecode:' + row.join(', '));
+								continue;
+							}
+
+							row.pop();
+							row.push((frames - 1).toString());
+							filteredRows.push(row);
+							continue;
+						}
+					}
+					if (row[10] === '' || row[10] === undefined || row[10] === null) {
+						skippedLines.push('No timecode for marker:\n' + row.join(', '));
+						continue;
+					}
+					const frames = getFrames(row[10], fps);
+					if (frames === null) {
+						skippedLines.push('Cant parse timecode:' + row.join(', '));
+						continue;
+					}
 					row.pop();
 					row.push(frames.toString());
 					filteredRows.push(row);
-					continue;
 				}
-			}
-			if (row[10] === '' || row[10] === undefined || row[10] === null) continue;
-			const frames = getFrames(row[10], fps);
-			row.pop();
-			row.push(frames.toString());
-			filteredRows.push(row);
-		}
 
-		const sortedRows = filteredRows.sort((a, b) => {
-			const rA = a[10];
-			const rB = b[10];
-			return parseInt(rA) - parseInt(rB);
-		});
+				const sortedRows = filteredRows.sort((a, b) => {
+					const rA = a[10];
+					const rB = b[10];
+					return parseInt(rA) - parseInt(rB);
+				});
 
-		const increment = 100 / sortedRows.length;
+				const increment = 100 / sortedRows.length;
 
-		let layers: Layer[] = [];
-		let prevlayer;
-		let localfragnum = '0';
-		for (let i = 0; i < sortedRows.length; i++) {
-			progressbar1.value += increment;
-			win.update();
-			const row = sortedRows[i];
-			if (row[0] === 'GROUP') {
-				localfragnum = row[1];
-				continue;
-			}
-
-			if (row[10] === undefined || row[10] === '') continue;
-
-			if (Number(row[0]) < 1 || Number(row[0]) > 5) continue;
-
-			const localindex = row[0];
-
-			for (let j = 0; j < files.length; j++) {
-				const filename = (files as FootageItem[])[j].name.split('.')[0];
-				const fragindex = filename.substr(filename.length - 1, 1);
-				const fragnum = filename.split('_')[0];
-
-				if (fragnum === localfragnum && fragindex === localindex) {
-					const layer = (activecomp as CompItem).layers.add((files as FootageItem[])[j]);
-					layer.startTime = parseInt(row[10]) / fps;
-
-					layers.push(layer);
-
-					if (prevlayer) {
-						(prevlayer as Layer).outPoint = parseInt(row[10]) / fps;
+				let layers: Layer[] = [];
+				let prevlayer;
+				let localfragnum = '0';
+				for (let i = 0; i < sortedRows.length; i++) {
+					progressbar1.value += increment;
+					win.update();
+					const row = sortedRows[i];
+					if (row[0] === 'GROUP') {
+						localfragnum = row[1];
+						continue;
 					}
-					prevlayer = layer;
-					break;
+
+					if (row[10] === undefined || row[10] === '') {
+						skippedLines.push('No timecode for marker:\n' + row.join(', '));
+						continue;
+					}
+
+					if (Number(row[0]) < 1 || Number(row[0]) > 5) {
+						skippedLines.push('Row is out of range 1 to 5\n' + row.join(', '));
+						continue;
+					}
+
+					const localindex = row[0];
+					let isFound = false;
+					for (let j = 0; j < files.length; j++) {
+						const filename = (files as FootageItem[])[j].name.split('.')[0];
+						const fragindex = filename.substr(filename.length - 1, 1);
+						const fragnum = filename.split('_')[0];
+
+						if (fragnum === localfragnum && fragindex === localindex) {
+							isFound = true;
+							const layer = (activecomp as CompItem).layers.add(
+								(files as FootageItem[])[j]
+							);
+							layer.startTime = parseInt(row[10]) / fps;
+
+							layers.push(layer);
+
+							if (prevlayer) {
+								(prevlayer as Layer).outPoint = parseInt(row[10]) / fps;
+							}
+							prevlayer = layer;
+							break;
+						}
+					}
+					if (!isFound) skippedLines.push('No file found for line:\n' + row.join(', '));
+				}
+
+				if (skippedLines.length > 0) {
+					logger(
+						`Skipped lines:\n\n${skippedLines.join('\n\n')}`,
+						'Few lines were skipped\nCheck logs.txt file, which is located next to project file.'
+					);
+				}
+
+				if (layers.length === 0) return;
+
+				let layers_indexes = map(layers, (layer) => layer.index);
+
+				let precomp = (activecomp as CompItem).layers.precompose(
+					layers_indexes,
+					'killfeed_precomp',
+					true
+				);
+
+				let precomp_mask = (activecomp as CompItem).layer(precomp.name).duplicate();
+				precomp_mask.name = 'killfeed_precomp_mask';
+				precomp_mask.moveAfter((activecomp as CompItem).layer(2));
+
+				precomp_mask('Effects').addProperty('Matte Choker');
+				(
+					precomp_mask('Effects')
+						.property('Matte Choker')
+						.property('Geometric Softness 1') as Property
+				).setValue(0);
+
+				(
+					precomp_mask('Effects').property('Matte Choker').property('Choke 1') as Property
+				).setValue(-40);
+
+				(
+					precomp_mask('Effects')
+						.property('Matte Choker')
+						.property('Gray Level Softness 1') as Property
+				).setValue(0);
+
+				(
+					precomp_mask('Effects')
+						.property('Matte Choker')
+						.property('Gray Level Softness 2') as Property
+				).setValue(0);
+
+				let adjustment = (activecomp as CompItem).layers.addSolid(
+					[0, 0, 0],
+					'killfeed_blur',
+					(activecomp as CompItem).width,
+					(activecomp as CompItem).height,
+					1
+				);
+
+				adjustment.adjustmentLayer = true;
+
+				adjustment('Effects').addProperty('Gaussian Blur');
+
+				(
+					adjustment('Effects')
+						.property('Gaussian Blur')
+						.property('Blurriness') as Property
+				).setValue(50);
+
+				adjustment.moveAfter((activecomp as CompItem).layer(3));
+
+				adjustment.setTrackMatte(precomp_mask, TrackMatteType.ALPHA);
+
+				alert(`Frags were placed in ${activecomp.name} composition`);
+			} catch (error) {
+				if (error instanceof Error) {
+					logger(
+						'Place function error:\n' +
+							`${error.description}\n` +
+							`${error.toString()}\n` +
+							error.toSource(),
+						'Uncaught error in Place function\nCheck log.txt'
+					);
+				} else {
+					alert(error);
 				}
 			}
+		};
+
+		win.center();
+		win.show();
+	} catch (error) {
+		if (error instanceof Error) {
+			logger(
+				'Render function error:\n' +
+					`${error.description}\n` +
+					`${error.toString()}\n` +
+					error.toSource(),
+				'Uncaught error in Main function\nCheck log.txt'
+			);
+		} else {
+			alert(error);
 		}
-
-		if (layers.length === 0) return;
-
-		let layers_indexes = map(layers, (layer) => layer.index);
-
-		let precomp = (activecomp as CompItem).layers.precompose(
-			layers_indexes,
-			'killfeed_precomp',
-			true
-		);
-
-		let precomp_mask = (activecomp as CompItem).layer(precomp.name).duplicate();
-		precomp_mask.name = 'killfeed_precomp_mask';
-		precomp_mask.moveAfter((activecomp as CompItem).layer(2));
-
-		precomp_mask('Effects').addProperty('Matte Choker');
-		(
-			precomp_mask('Effects')
-				.property('Matte Choker')
-				.property('Geometric Softness 1') as Property
-		).setValue(0);
-
-		(precomp_mask('Effects').property('Matte Choker').property('Choke 1') as Property).setValue(
-			-40
-		);
-
-		(
-			precomp_mask('Effects')
-				.property('Matte Choker')
-				.property('Gray Level Softness 1') as Property
-		).setValue(0);
-
-		(
-			precomp_mask('Effects')
-				.property('Matte Choker')
-				.property('Gray Level Softness 2') as Property
-		).setValue(0);
-
-		let adjustment = (activecomp as CompItem).layers.addSolid(
-			[0, 0, 0],
-			'killfeed_blur',
-			(activecomp as CompItem).width,
-			(activecomp as CompItem).height,
-			1
-		);
-
-		adjustment.adjustmentLayer = true;
-
-		adjustment('Effects').addProperty('Gaussian Blur');
-
-		(
-			adjustment('Effects').property('Gaussian Blur').property('Blurriness') as Property
-		).setValue(50);
-
-		adjustment.moveAfter((activecomp as CompItem).layer(3));
-
-		adjustment.setTrackMatte(precomp_mask, TrackMatteType.ALPHA);
-	} catch (e) {
-		alert(e);
 	}
-};
+}
 
-win.center();
-win.show();
+mainEntry();

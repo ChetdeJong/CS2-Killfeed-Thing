@@ -10,6 +10,11 @@
 			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
 			"sourceMaps": true,
 			"console": "integratedTerminal"
+		},
+		{
+			"type": "extendscript-debug",
+			"request": "attach",
+			"name": "Attach to ExtendScript Engine"
 		}
 	]
 }

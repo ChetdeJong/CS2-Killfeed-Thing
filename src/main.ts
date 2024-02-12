@@ -19,7 +19,7 @@ const askForDemos = async (): Promise<string> => {
 		console.clear();
 		rl.question('Enter starting index:', (answer) => {
 			startingindex = parseInt(answer);
-			if (isNaN(startingindex) || startingindex <= 0) {
+			if (isNaN(Number(startingindex)) || startingindex <= 0) {
 				startingindex = 1;
 			}
 			console.log('Starting index:', startingindex);
@@ -46,8 +46,7 @@ const askForDemos = async (): Promise<string> => {
 		rl.on('line', (line) => {
 			if (line === 'run') {
 				const res = getKillfeed(lines.join('\n'), startingindex);
-				// resolve('');
-				resolve(res);
+				res ? resolve(res) : resolve('');
 			}
 			lines.push(line);
 		});

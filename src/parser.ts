@@ -5,18 +5,29 @@ import path from 'path';
 import { rootdir } from './main';
 
 export const getKills = (file: string) => {
-	const kills: player_death[] = parseEvent(
-		file,
-		'player_death',
-		['is_warmup_period', 'team_name', 'team_clan_name', 'team_rounds_total'],
-		['total_rounds_played', 'round_win_status']
-	);
-	let killsNoWarmup = kills.filter((kill) => kill.is_warmup_period == false);
-	let filteredKills = killsNoWarmup.filter(
-		(kill) => kill.attacker_team_name != kill.user_team_name
-	);
+	try {
+		const kills: player_death[] = parseEvent(
+			file,
+			'player_death',
+			['is_warmup_period', 'team_name', 'team_clan_name', 'team_rounds_total'],
+			['total_rounds_played', 'round_win_status']
+		);
+		let killsNoWarmup = kills.filter((kill) => kill.is_warmup_period == false);
+		let filteredKills = killsNoWarmup.filter(
+			(kill) => kill.attacker_team_name != kill.user_team_name
+		);
 
-	return filteredKills;
+		return filteredKills;
+	} catch (error) {
+		if (error instanceof Error) {
+			console.log('Parsing error:');
+			console.log(error.name);
+			console.log(error.message);
+			console.log(error.stack);
+		} else {
+			console.error(error);
+		}
+	}
 };
 
 export const getPlayers = (file: string) => {
@@ -52,6 +63,11 @@ export const parseDemo = (input: string, startIndex: number = 1) => {
 
 	const kills = getKills(file);
 
+	if (!kills) {
+		console.log(`Kills were not parsed in demo ${demoname}`);
+		return [];
+	}
+
 	const out: string[][][] = [];
 
 	values.forEach((value, index) => {
@@ -67,64 +83,75 @@ export const parseDemo = (input: string, startIndex: number = 1) => {
 };
 
 export const getKillfeed = (input: string, startIndex: number = 1) => {
-	const rows = input.split('\n');
+	try {
+		const rows = input.split('\n');
 
-	const demos: string[] = [];
+		const demos: string[] = [];
 
-	let frags: string[] = [];
-	let groups: string[][] = [];
+		let frags: string[] = [];
+		let groups: string[][] = [];
 
-	rows.forEach((row) => {
-		const line = row.split('\t');
+		rows.forEach((row) => {
+			const line = row.split('\t');
 
-		if (
-			line[0] === 'demoname' ||
-			!(line[0] || line[1] || line[2]) ||
-			line[0] === '' ||
-			line[1] === '' ||
-			line[2] === ''
-		) {
-			groups.push(frags);
-			frags = [];
-			return;
-		}
-		frags.push([line[0], line[1], line[2]].join(','));
-	});
-
-	groups.push(frags);
-
-	groups.forEach((group) => {
-		if (group.length === 0) return;
-
-		const localdata: string[] = [];
-		const fragsByPlayers = group.reduce((acc: { [key: string]: string[] }, row: string) => {
-			const steam = row.split(',')[1];
-			if (!acc[steam]) acc[steam] = [];
-			acc[steam].push(row.split(',')[2]);
-			return acc;
-		}, {});
-
-		const demoname = group[0].split(',')[0];
-
-		Object.keys(fragsByPlayers).forEach((steamid) => {
-			const frags = fragsByPlayers[steamid];
-			const tick = (parseInt(frags[0]) - 5).toString();
-			const fragNum = frags.length;
-			localdata.push(`${tick}-${steamid}-${fragNum}`);
+			if (
+				line[0] === 'demoname' ||
+				!(line[0] || line[1] || line[2]) ||
+				line[0] === '' ||
+				line[1] === '' ||
+				line[2] === ''
+			) {
+				groups.push(frags);
+				frags = [];
+				return;
+			}
+			frags.push([line[0], line[1], line[2]].join(','));
 		});
 
-		demos.push(`${demoname}\t${localdata.join(',')}`);
-	});
+		groups.push(frags);
 
-	const out = demos.map((demo, index) => {
-		if (demo === '') return '';
-		const res = parseDemo(demo, index + startIndex);
-		if (res.length === 0) {
-			startIndex--;
-			return '';
+		groups.forEach((group) => {
+			if (group.length === 0) return;
+
+			const localdata: string[] = [];
+			const fragsByPlayers = group.reduce((acc: { [key: string]: string[] }, row: string) => {
+				const steam = row.split(',')[1];
+				if (!acc[steam]) acc[steam] = [];
+				acc[steam].push(row.split(',')[2]);
+				return acc;
+			}, {});
+
+			const demoname = group[0].split(',')[0];
+
+			Object.keys(fragsByPlayers).forEach((steamid) => {
+				const frags = fragsByPlayers[steamid];
+				const tick = (parseInt(frags[0]) - 5).toString();
+				const fragNum = frags.length;
+				localdata.push(`${tick}-${steamid}-${fragNum}`);
+			});
+
+			demos.push(`${demoname}\t${localdata.join(',')}`);
+		});
+
+		const out = demos.map((demo, index) => {
+			if (demo === '') return '';
+			const res = parseDemo(demo, index + startIndex);
+			if (res.length === 0) {
+				startIndex--;
+				return '';
+			}
+			if (res.length > 1) startIndex = startIndex + res.length - 1;
+			return res.join('\n');
+		});
+		return out.filter((demo) => demo !== '').join('\n');
+	} catch (error) {
+		if (error instanceof Error) {
+			console.log('Killfeed error:');
+			console.log(error.name);
+			console.log(error.message);
+			console.log(error.stack);
+		} else {
+			console.error(error);
 		}
-		if (res.length > 1) startIndex = startIndex + res.length - 1;
-		return res.join('\n');
-	});
-	return out.filter((demo) => demo !== '').join('\n');
+	}
 };
