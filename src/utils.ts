@@ -59,7 +59,7 @@ export const getFrag = (values: string, kills: player_death[], index: number) =>
 	const weapon = mostCommonWeapon(weapons);
 
 	formattedKills.unshift([
-		'FRAG',
+		'GROUP',
 		`${index.toString()}`,
 		`${filteredKills[0].attacker_name}-${
 			filteredKills.length

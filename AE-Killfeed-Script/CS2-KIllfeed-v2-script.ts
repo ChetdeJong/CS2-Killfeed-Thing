@@ -1,3 +1,5 @@
+const version = '2.2.0';
+
 const weapons = [
 	'glock',
 	'usp-silencer-off',
@@ -113,7 +115,7 @@ function processDeathnotices(data, comp: CompItem) {
 			progressbar1.value += increment;
 			win.update();
 			const row = rows[i].split(',');
-			if (row[0] === 'FRAG') {
+			if (row[0] === 'GROUP') {
 				filename = row[2] == '' || row[2] == undefined ? row[1] : `${row[1]}_${row[2]}`;
 				resetDeathnotices(comp);
 				continue;
@@ -134,7 +136,6 @@ function processDeathnotices(data, comp: CompItem) {
 				frame: row[10]
 			};
 			setDeathnotice(comp, rowObj);
-			// if (rows[i + 1].split(',')[0] === 'FRAG') break;
 		}
 	} catch (error) {
 		alert(error);
@@ -202,7 +203,7 @@ function getFrames(timecode: string, fps: number) {
 	}
 }
 
-const win = new Window('dialog', 'CS2 Killfeed v2.1', undefined, {
+const win = new Window('dialog', `CS2 Killfeed Script v${version}`, undefined, {
 	resizeable: false,
 	closeButton: false
 });
@@ -397,7 +398,7 @@ const rows: string[] = data.split('\n');
 
 for (let i = 1; i < rows.length; i++) {
 	const row = rows[i].split(',');
-	if (row[0] === 'FRAG') {
+	if (row[0] === 'GROUP') {
 		table.add('item', row[2]);
 		continue;
 	}
@@ -527,7 +528,7 @@ placebtn.onClick = function () {
 		for (let i = 1; i < rows.length; i++) {
 			const row = rows[i].split(',');
 			const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
-			if (row[0] === 'FRAG') {
+			if (row[0] === 'GROUP') {
 				if (nextRow && (nextRow[10] !== '' || nextRow[10] !== undefined)) {
 					const frames = getFrames(nextRow[10], fps) - 1;
 					row.pop();
@@ -558,7 +559,7 @@ placebtn.onClick = function () {
 			progressbar1.value += increment;
 			win.update();
 			const row = sortedRows[i];
-			if (row[0] === 'FRAG') {
+			if (row[0] === 'GROUP') {
 				localfragnum = row[1];
 				continue;
 			}
