@@ -38,21 +38,36 @@ It will generate `.csv` file which is formatted with tabs. Means you can copy pa
 
 ## 2) Get frags for killfeed template
 
-You can provide demos data in following format
+Provide starting index (optional).
 
-`demoname	tick-steamid-numberofkills`
-
-Note that there's tab between demoname and frag info. If you copy it from spreadsheet it will be with tab already (ofc if demoname in different cell).
-
-You can provide multiple frags in each demo and multiple demos e.g.
+Provide demos data in following format. You can copy paste output from first function for ease of use.
 
 ```
-demoname1	tick-steamid-numberofkills,tick-steamid-numberofkills
-demoname2	tick-steamid-numberofkills
+demoname    steamid    tick
+demoname    steamid    tick
+demoname    steamid    tick
 ```
 
-Copy it and paste in terminal when prompted. Right click to paste.
-Press enter to get on new line and then type `run` to parse demos.
+Note that there's tab between demoname and frag info. If you copy it from spreadsheet it will be with tab already (ofc if values are in different cells). You can separate groups of kills by empty line.
+
+Example:
+
+```
+faze-vs-g2-m1-inferno    76561197998926770    141134
+faze-vs-g2-m1-inferno    76561197998926770    141282
+faze-vs-g2-m1-inferno    76561197998926770    141373
+
+faze-vs-g2-m2-ancient    76561198074762801    162312
+faze-vs-g2-m2-ancient    76561198074762801    164096
+faze-vs-g2-m2-ancient    76561198074762801    165597
+```
+
+Also note that one group = one demo. If multiple players provided they will get split into groups.
+
+Otherwise separate into different groups (separate by empty line).
+
+Use right click to paste in terminal.
+When done press enter to get on new line and then type `run` and enter again to get killfeed data.
 
 It will generate `.csv` formatted with tabs, which you can paste to spreadsheet to use with AE killfeed template script.
 

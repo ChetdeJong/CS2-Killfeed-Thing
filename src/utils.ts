@@ -2,6 +2,7 @@ import { parseHeader } from '@laihoe/demoparser2';
 import { getKills } from './parser';
 import { player_death, header } from './types';
 import fs from 'fs';
+import path from 'path';
 
 export const formatKills = (kills: player_death[]) => {
 	const out: string[][] = [];
@@ -49,6 +50,7 @@ export const getFrag = (values: string, kills: player_death[], index: number) =>
 		.filter((kill) => kill.tick >= providedtick)
 		.slice(0, fragnum);
 
+	if (filteredKills.length === 0) return null;
 	const formattedKills = formatKills(filteredKills);
 
 	const weapons = filteredKills.map((kill) =>
@@ -147,14 +149,16 @@ export const getFormattedKills = (
 		if (!playerKills || playerKills.length === 0) continue;
 
 		const kills = playerKills.map((kill) => [
-			header.map_name,
-			(kill.total_rounds_played + 1).toString(),
+			path.basename(demo).split('.')[0],
+			kill.attacker_steamid,
 			kill.tick.toString(),
 			kill.attacker_team_clan_name,
 			kill.attacker_name,
 			kill.weapon,
 			kill.user_team_clan_name,
-			kill.user_name
+			kill.user_name,
+			(kill.total_rounds_played + 1).toString(),
+			header.map_name
 		]);
 		frags.push(...kills, ['']);
 	}

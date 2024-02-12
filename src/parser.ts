@@ -56,6 +56,10 @@ export const parseDemo = (input: string, startIndex: number = 1) => {
 
 	values.forEach((value, index) => {
 		const frag = getFrag(value, kills, startIndex + index);
+		if (frag === null) {
+			startIndex--;
+			return;
+		}
 		out.push(frag);
 	});
 
@@ -63,12 +67,64 @@ export const parseDemo = (input: string, startIndex: number = 1) => {
 };
 
 export const getKillfeed = (input: string, startIndex: number = 1) => {
-	const demos = input.split('\n');
+	const rows = input.split('\n');
+
+	const demos: string[] = [];
+
+	let frags: string[] = [];
+	let groups: string[][] = [];
+
+	rows.forEach((row) => {
+		const line = row.split('\t');
+
+		if (
+			line[0] === 'demoname' ||
+			!(line[0] || line[1] || line[2]) ||
+			line[0] === '' ||
+			line[1] === '' ||
+			line[2] === ''
+		) {
+			groups.push(frags);
+			frags = [];
+			return;
+		}
+		frags.push([line[0], line[1], line[2]].join(','));
+	});
+
+	groups.push(frags);
+
+	groups.forEach((group) => {
+		if (group.length === 0) return;
+
+		const localdata: string[] = [];
+		const fragsByPlayers = group.reduce((acc: { [key: string]: string[] }, row: string) => {
+			const steam = row.split(',')[1];
+			if (!acc[steam]) acc[steam] = [];
+			acc[steam].push(row.split(',')[2]);
+			return acc;
+		}, {});
+
+		const demoname = group[0].split(',')[0];
+
+		Object.keys(fragsByPlayers).forEach((steamid) => {
+			const frags = fragsByPlayers[steamid];
+			const tick = (parseInt(frags[0]) - 5).toString();
+			const fragNum = frags.length;
+			localdata.push(`${tick}-${steamid}-${fragNum}`);
+		});
+
+		demos.push(`${demoname}\t${localdata.join(',')}`);
+	});
+
 	const out = demos.map((demo, index) => {
 		if (demo === '') return '';
 		const res = parseDemo(demo, index + startIndex);
+		if (res.length === 0) {
+			startIndex--;
+			return '';
+		}
 		if (res.length > 1) startIndex = startIndex + res.length - 1;
 		return res.join('\n');
 	});
-	return out.join('\n');
+	return out.filter((demo) => demo !== '').join('\n');
 };

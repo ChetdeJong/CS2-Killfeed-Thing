@@ -19,22 +19,34 @@ const askForDemos = async (): Promise<string> => {
 		console.clear();
 		rl.question('Enter starting index:', (answer) => {
 			startingindex = parseInt(answer);
+			if (isNaN(startingindex) || startingindex <= 0) {
+				startingindex = 1;
+			}
 			console.log('Starting index:', startingindex);
-			console.log('Paste demos data line by line, when done type "run" and press enter');
+			console.log('Paste frags data line by line in following format:');
 			console.log('');
-			console.log('Data format: demoname    frag,frag,frag');
-			console.log('Frag format: tick-steamid-numberOfKills');
+			console.log('demoname    steamid    tick');
+			console.log('');
+			console.log('Note, there these are separated by tabs.');
+			console.log('Separate groups by empty line.');
+			console.log('');
+			console.log('Example:');
 			console.log(
-				'Example: monte-vs-cloud9-m2-mirage    163300-76561198975452660-5,163300-76561198975452660-5'
+				'faze-vs-g2-m1-inferno    76561197998926770    141134\nfaze-vs-g2-m1-inferno    76561197998926770    141282\nfaze-vs-g2-m1-inferno    76561197998926770    141373'
 			);
 			console.log('');
-			console.log('Note, there is tab between demoname and frags');
+			console.log(
+				'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801   165597'
+			);
+			console.log('');
+			console.log('When done type "run" and press enter');
 			console.log('');
 		});
 
 		rl.on('line', (line) => {
 			if (line === 'run') {
 				const res = getKillfeed(lines.join('\n'), startingindex);
+				// resolve('');
 				resolve(res);
 			}
 			lines.push(line);
@@ -148,14 +160,16 @@ const menu = () => {
 					const selected = await getSelectedDemos(demos);
 					const res = [
 						[
-							'map',
-							'round',
+							'demoname',
+							'attacker_steamid',
 							'tick',
 							'attacker_team',
 							'attacker',
 							'weapon',
 							'victim_team',
-							'victim'
+							'victim',
+							'round',
+							'map'
 						].join('\t')
 					];
 					if (selected.length === 1) {
@@ -167,7 +181,6 @@ const menu = () => {
 							}
 						);
 						if (parsed !== '') {
-							res.push(selected[0]);
 							res.push(parsed);
 							saveToCSV(res.join('\n'));
 						}
@@ -181,7 +194,6 @@ const menu = () => {
 								}
 							);
 							if (parsed !== '') {
-								res.push(demo.split('.')[0]);
 								res.push(parsed);
 							}
 						});
