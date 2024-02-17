@@ -2,8 +2,8 @@ const version = '2.2.0';
 
 const weapons = [
 	'glock',
-	'usp-silencer-off',
-	'usp-silencer',
+	'usp_silencer_off',
+	'usp_silencer',
 	'hkp2000',
 	'p250',
 	'elite',
@@ -15,8 +15,8 @@ const weapons = [
 	'galilar',
 	'famas',
 	'ak47',
-	'm4a1-silencer-off',
-	'm4a1-silencer',
+	'm4a1_silencer_off',
+	'm4a1_silencer',
 	'm4a1',
 	'sg556',
 	'aug',
@@ -47,29 +47,29 @@ const weapons = [
 	'taser',
 	'bayonet',
 	'knifegg',
-	'knife-widowmaker',
-	'knife-ursus',
-	'knife-tactical',
-	'knife-t',
-	'knife-survival-bowie',
-	'knife-cord',
-	'knife-css',
-	'knife-falchion',
-	'knife-flip',
-	'knife-gut',
-	'knife-gypsy-jackknife',
-	'knife-karambit',
-	'knife-kukri',
-	'knife-m9-bayonet',
-	'knife-outdoor',
-	'knife-push',
-	'knife-skeleton',
-	'knife-stiletto',
-	'knife-canis',
-	'knife-butterfly',
-	'knife-bowie',
+	'knife_widowmaker',
+	'knife_ursus',
+	'knife_tactical',
+	'knife_t',
+	'knife_survival_bowie',
+	'knife_cord',
+	'knife_css',
+	'knife_falchion',
+	'knife_flip',
+	'knife_gut',
+	'knife_gypsy_jackknife',
+	'knife_karambit',
+	'knife_kukri',
+	'knife_m9_bayonet',
+	'knife_outdoor',
+	'knife_push',
+	'knife_skeleton',
+	'knife_stiletto',
+	'knife_canis',
+	'knife_butterfly',
+	'knife_bowie',
 	'knife',
-	'knife-twinblade'
+	'knife_twinblade'
 ];
 
 function readCSV(file): string {
@@ -91,6 +91,7 @@ interface row {
 	wallbang: string;
 	noscope: string;
 	smoke: string;
+	blind: string;
 	frame: string | undefined;
 }
 
@@ -131,6 +132,7 @@ function setLayerProperties(layer: Layer, row: any) {
 	layer.essentialProperty('wallbang').setValue(row.wallbang);
 	layer.essentialProperty('noscope').setValue(row.noscope);
 	layer.essentialProperty('smoke-kill').setValue(row.smoke);
+	layer.essentialProperty('blind').setValue(row.blind);
 }
 
 function saveDeathnotice(comp: CompItem, name) {
@@ -218,7 +220,7 @@ function mainEntry() {
 
 					const weaponIndex = findIndex(weapons, row[5]);
 					if (weaponIndex === -1) {
-						skippedLines.push('Wrong weapon:\n' + row.join(', '));
+						skippedLines.push('Unknown weapon:\n' + row.join(', '));
 						continue;
 					}
 
@@ -234,7 +236,8 @@ function mainEntry() {
 						wallbang: row[7] === 'TRUE' ? '1' : '0',
 						noscope: row[8] === 'TRUE' ? '1' : '0',
 						smoke: row[9] === 'TRUE' ? '1' : '0',
-						frame: row[10]
+						blind: row[10] === 'TRUE' ? '1' : '0',
+						frame: row[11]
 					};
 					setDeathnotice(comp, rowObj);
 				}
@@ -638,8 +641,8 @@ function mainEntry() {
 					const row = rows[i].split(',');
 					const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
 					if (row[0] === 'GROUP') {
-						if (nextRow && (nextRow[10] !== '' || nextRow[10] !== undefined)) {
-							const frames = getFrames(nextRow[10], fps);
+						if (nextRow && (nextRow[11] !== '' || nextRow[11] !== undefined)) {
+							const frames = getFrames(nextRow[11], fps);
 							if (frames === null) {
 								skippedLines.push('Cant parse timecode:' + row.join(', '));
 								continue;
@@ -651,11 +654,11 @@ function mainEntry() {
 							continue;
 						}
 					}
-					if (row[10] === '' || row[10] === undefined || row[10] === null) {
+					if (row[11] === '' || row[11] === undefined || row[11] === null) {
 						skippedLines.push('No timecode for marker:\n' + row.join(', '));
 						continue;
 					}
-					const frames = getFrames(row[10], fps);
+					const frames = getFrames(row[11], fps);
 					if (frames === null) {
 						skippedLines.push('Cant parse timecode:' + row.join(', '));
 						continue;
@@ -666,8 +669,8 @@ function mainEntry() {
 				}
 
 				const sortedRows = filteredRows.sort((a, b) => {
-					const rA = a[10];
-					const rB = b[10];
+					const rA = a[11];
+					const rB = b[11];
 					return parseInt(rA) - parseInt(rB);
 				});
 
@@ -685,7 +688,7 @@ function mainEntry() {
 						continue;
 					}
 
-					if (row[10] === undefined || row[10] === '') {
+					if (row[11] === undefined || row[11] === '') {
 						skippedLines.push('No timecode for marker:\n' + row.join(', '));
 						continue;
 					}
@@ -707,12 +710,12 @@ function mainEntry() {
 							const layer = (activecomp as CompItem).layers.add(
 								(files as FootageItem[])[j]
 							);
-							layer.startTime = parseInt(row[10]) / fps;
+							layer.startTime = parseInt(row[11]) / fps;
 
 							layers.push(layer);
 
 							if (prevlayer) {
-								(prevlayer as Layer).outPoint = parseInt(row[10]) / fps;
+								(prevlayer as Layer).outPoint = parseInt(row[11]) / fps;
 							}
 							prevlayer = layer;
 							break;

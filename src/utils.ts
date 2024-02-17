@@ -17,7 +17,8 @@ export const formatKills = (kills: player_death[]) => {
 			kill.headshot ? 'TRUE' : 'FALSE',
 			kill.penetrated === 0 ? 'FALSE' : 'TRUE',
 			kill.noscope ? 'TRUE' : 'FALSE',
-			kill.thrusmoke ? 'TRUE' : 'FALSE'
+			kill.thrusmoke ? 'TRUE' : 'FALSE',
+			kill.attackerblind ? 'TRUE' : 'FALSE'
 		]);
 	});
 	return out;
