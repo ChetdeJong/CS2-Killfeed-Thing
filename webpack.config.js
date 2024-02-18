@@ -43,7 +43,12 @@ module.exports = {
 					from: path.resolve(__dirname, 'LICENSE')
 				},
 				{
-					from: path.resolve(__dirname, 'AE-Killfeed-Script', 'CS2-KIllfeed-v2-script.js')
+					from: path.resolve(
+						__dirname,
+						'AE-Killfeed-Script',
+						'CS2-KIllfeed-v2-script.js'
+					),
+					info: () => ({ minimized: true })
 				},
 				{
 					from: path.resolve(__dirname, 'AE-Killfeed-Script', 'CS2-KIllfeed-v2.aep')
