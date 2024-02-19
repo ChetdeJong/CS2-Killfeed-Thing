@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { getKillfeed, getPlayers } from './parser';
-import { getFormattedKills, saveToCSV } from './utils';
+import { formatInAndOutPoints, getFormattedKills, saveToCSV } from './utils';
 
 export const rootdir = './';
 
@@ -39,7 +39,7 @@ const askForDemos = async (): Promise<string> => {
 				'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801   165597'
 			);
 			console.log('');
-			console.log('When done type "run" and press enter');
+			console.log('When done type "run" on new line and press enter');
 			console.log('');
 		});
 
@@ -118,6 +118,33 @@ const getSteamParam = async (): Promise<string | undefined> => {
 	});
 };
 
+const askForTimecodes = async (): Promise<string | undefined> => {
+	const lines: string[] = [];
+	return new Promise((resolve) => {
+		console.clear();
+		console.log(
+			'Paste timecodes from spreadsheet\n\nformat:\ntimecode    name\ntimecode    name\ntimecode    name\n\nNote, there is tab between\n'
+		);
+
+		console.log(
+			'When using this script make sure you have named everything correctly and markers dont overlap with campaths.'
+		);
+
+		console.log(
+			'Check video tutorial for details: https://github.com/ChetdeJong/CS2-Killfeed-Thing\n'
+		);
+
+		console.log('When done type "run" on new line and press enter\n\n');
+		rl.on('line', (line) => {
+			if (line === 'run') {
+				const res = formatInAndOutPoints(lines);
+				resolve(res);
+			}
+			lines.push(line);
+		});
+	});
+};
+
 const getKillsParams = async (): Promise<number[]> => {
 	return new Promise((resolve) => {
 		console.clear();
@@ -147,10 +174,10 @@ const getKillsParams = async (): Promise<number[]> => {
 const menu = () => {
 	console.clear();
 	rl.question(
-		'Select function:\n1) Parse demos for frags\n2) Parse demos for killfeed\n3) Parse players from demo\n\n',
+		'Select function:\n1) Parse demos for frags\n2) Parse demos for killfeed\n3) Parse players from demo\n4) Get in and out points from timecodes\n\n',
 		async (answer) => {
-			if (answer !== '1' && answer !== '2' && answer !== '3') {
-				console.log('Invalid selection. Please enter 1, 2, or 3.');
+			if (answer !== '1' && answer !== '2' && answer !== '3' && answer !== '4') {
+				console.log('Invalid selection. Please enter 1, 2, 3 or 4.');
 				menu();
 			} else {
 				if (answer === '1') {
@@ -226,6 +253,16 @@ const menu = () => {
 							console.log(demo + '\n');
 							console.log(getPlayers(path.resolve(rootdir, 'demos', `${demo}.dem`)));
 						});
+					}
+					rl.close();
+				}
+
+				if (answer === '4') {
+					const res = await askForTimecodes();
+					if (res) {
+						saveToCSV(res);
+					} else {
+						console.log('Couldnt parse timecodes');
 					}
 					rl.close();
 				}

@@ -4,6 +4,114 @@ import { player_death, header } from './types';
 import fs from 'fs';
 import path from 'path';
 
+function getFrames(timecode: string, fps: number = 30) {
+	try {
+		const time = timecode.replace('.', ':');
+
+		const timeArray = time.split(':');
+
+		if (timeArray.length !== 4) return null;
+		let frames = Number(timeArray[3]);
+
+		if (Number(timeArray[0]) !== 0) frames = frames + Number(timeArray[0]) * 60 * 60 * fps;
+		if (Number(timeArray[1]) !== 0) frames = frames + Number(timeArray[1]) * 60 * fps;
+		if (Number(timeArray[2]) !== 0) frames = frames + Number(timeArray[2]) * fps;
+
+		if (isNaN(frames)) throw new Error('Cant parse frames');
+
+		return frames;
+	} catch (error) {
+		return null;
+	}
+}
+
+export const formatInAndOutPoints = (input: string[]) => {
+	const lines = input.filter(
+		(line) => line.split('\t')[0] !== '' && line.split('\t')[0].includes(':')
+	);
+
+	lines.sort((a, b) => {
+		const framesA = getFrames(a.split('\t')[0]);
+		const framesB = getFrames(b.split('\t')[0]);
+
+		if (framesA !== null && framesB !== null) {
+			return framesA - framesB;
+		} else {
+			return 0;
+		}
+	});
+
+	let currentfrag = '';
+	let isFirstKillPassed = false;
+	const inPoints: string[] = ['in points'];
+	const outPoints: string[] = ['out points'];
+
+	lines.forEach((line, idx) => {
+		const nextline = lines[idx + 1];
+
+		if (!nextline) return;
+
+		// save current pov
+		if (line.includes('pov')) currentfrag = line.split('\t')[1];
+
+		// in point if current is marker and first kill is not passed
+		if (!line.includes('campath') && !line.includes('pov') && !isFirstKillPassed) {
+			inPoints.push(line.split('\t')[0]);
+			isFirstKillPassed = true;
+		}
+
+		// skip until first marker is passed
+		if (!isFirstKillPassed) return;
+
+		// out point if current is pov next is campath
+		if (line.includes('pov') && nextline.includes('campath'))
+			return outPoints.push(nextline.split('\t')[0]);
+
+		// out point if current is pov and next is different pov and not marker
+		if (
+			line.includes('pov') &&
+			nextline.split('\t')[1] !== currentfrag &&
+			!(!nextline.includes('campath') && !nextline.includes('pov'))
+		)
+			return outPoints.push(nextline.split('\t')[0]);
+
+		// in point if current is campath and next is pov and next is not different pov
+		if (
+			line.includes('campath') &&
+			nextline.includes('pov') &&
+			nextline.split('\t')[1] === currentfrag
+		)
+			return inPoints.push(nextline.split('\t')[0]);
+
+		// in point if next is marker
+		if (
+			(line.includes('pov') || line.includes('campath')) &&
+			!nextline.includes('campath') &&
+			!nextline.includes('pov')
+		)
+			return inPoints.push(nextline.split('\t')[0]);
+
+		// out point if current is marker next is campath
+		if (!line.includes('campath') && !line.includes('pov') && nextline.includes('campath'))
+			return outPoints.push(nextline.split('\t')[0]);
+
+		// out point if current is marker and next is pov and next is different pov
+		if (
+			!line.includes('campath') &&
+			!line.includes('pov') &&
+			nextline.includes('pov') &&
+			nextline.split('\t')[1] !== currentfrag
+		)
+			return outPoints.push(nextline.split('\t')[0]);
+	});
+
+	const points = inPoints.join('\n') + '\n\n' + outPoints.join('\n');
+
+	const res = lines.length === 0 ? undefined : points;
+
+	return res;
+};
+
 export const formatKills = (kills: player_death[]) => {
 	const out: string[][] = [];
 	kills.forEach((kill, index) => {
@@ -81,8 +189,10 @@ export const saveToCSV = (data: string) => {
 	)}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
 	fs.writeFile(`${current_date}.csv`, data, (err) => {
 		if (err) {
+			console.clear();
 			console.error('An error occurred:', err);
 		} else {
+			console.clear();
 			console.log(`Saved to ${current_date}.csv`);
 		}
 	});
