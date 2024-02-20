@@ -3,6 +3,7 @@ import path from 'path';
 import readline from 'readline';
 import { getKillfeed, getPlayers } from './parser';
 import { formatInAndOutPoints, getFormattedKills, saveToCSV } from './utils';
+const packageJson = require('../package.json');
 
 export const rootdir = './';
 
@@ -36,7 +37,7 @@ const askForDemos = async (): Promise<string> => {
 			);
 			console.log('');
 			console.log(
-				'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801   165597'
+				'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801    165597'
 			);
 			console.log('');
 			console.log('When done type "run" on new line and press enter');
@@ -53,15 +54,18 @@ const askForDemos = async (): Promise<string> => {
 	});
 };
 
-if (!fs.readdirSync(path.resolve(rootdir)).includes('demos')) {
-	console.log('demos folder not found, create it.');
-	process.exit(0);
-}
-const demos = fs.readdirSync(path.resolve(rootdir, 'demos'));
-if (demos.length === 0) {
-	console.log('No demos found in demos folder');
-	process.exit(0);
-}
+const checkDemos = () => {
+	if (!fs.readdirSync(path.resolve(rootdir)).includes('demos')) {
+		console.log('demos folder not found, create it.');
+		process.exit(0);
+	}
+	const demos = fs.readdirSync(path.resolve(rootdir, 'demos'));
+	if (demos.length === 0) {
+		console.log('No demos found in demos folder');
+		process.exit(0);
+	}
+	return demos;
+};
 
 const getSelectedDemos = (demos: string[]): Promise<string[]> => {
 	return new Promise((resolve) => {
@@ -173,6 +177,9 @@ const getKillsParams = async (): Promise<number[]> => {
 
 const menu = () => {
 	console.clear();
+	console.log(`Killfeed thing v${packageJson.version}`);
+	console.log('https://github.com/ChetdeJong/CS2-Killfeed-Thing\n');
+
 	rl.question(
 		'Select function:\n1) Parse demos for frags\n2) Parse demos for killfeed\n3) Parse players from demo\n4) Get in and out points from timecodes\n\n',
 		async (answer) => {
@@ -181,6 +188,7 @@ const menu = () => {
 				menu();
 			} else {
 				if (answer === '1') {
+					const demos = checkDemos();
 					const steamid = await getSteamParam();
 					const includedKills = await getKillsParams();
 					const selected = await getSelectedDemos(demos);
@@ -232,6 +240,7 @@ const menu = () => {
 					rl.close();
 				}
 				if (answer === '2') {
+					checkDemos();
 					const res = await askForDemos();
 					if (res !== '') {
 						saveToCSV(res);
@@ -241,6 +250,7 @@ const menu = () => {
 					rl.close();
 				}
 				if (answer === '3') {
+					const demos = checkDemos();
 					const selected = await getSelectedDemos(demos);
 					console.log('');
 					if (selected.length === 1) {

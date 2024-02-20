@@ -4,19 +4,22 @@ Basically this is the package for making killfeed for CS2. It contains demo pars
 
 The parser script uses following parser https://github.com/LaihoE/demoparser
 
-If you want to parse demos, then you have to have [Node.js](https://nodejs.org/en/download/current) installed and added to `PATH`
+In order to use this package you'll need After Effects and [Node.js](https://nodejs.org/en/download/current) installed. Also Node.js has to be added to `PATH`.
 
 If some demo doesnt get parsed, then probably demo is corrupted or something wrong with parser, which is unlikely. Nothing I can do about it.
 
-Video tutorial: TBD
+Check video tutorial to understand how it all works:
 
 In script there are 3 options:
+TBD
 
 1. Parse frags from demos
 
 2. Get formatted frags for AE killfeed template script
 
 3. Get players steamids
+
+4. Get in and out points
 
 ## 1) Parsing frags
 
@@ -75,9 +78,21 @@ It will generate `.csv` formatted with tabs, which you can paste to spreadsheet 
 
 Same as previous, just follow instructions. It will give you steam ids of players in selected demo.
 
+## 4) Get in and out points
+
+You have to provide timecodes in foloowing format:
+
+```
+timecode	description
+timecode	description
+timecode	description
+```
+
+Check video tutorial to understand how it works and why you may or may not need it.
+
 # After Effects Killfeed Template with script
 
-Detailed video tutorial:
+Video tutorial:
 TBD
 
 1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
