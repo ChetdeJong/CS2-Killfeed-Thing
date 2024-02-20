@@ -99,7 +99,7 @@ Video tutorial: https://youtu.be/oeZ95yg7vN4
 
 3. Take out `CS2-KIllfeed` folder into root of your project.
 
-4. Copy spreadsheet https://docs.google.com/spreadsheets/d/1BZdVUo386uld1ZBmGNzcN43C-Auky3VDCb6OVf8olA4 and fill out using provided example in there.
+4. Copy spreadsheet https://docs.google.com/spreadsheets/d/1BZdVUo386uld1ZBmGNzcN43C-Auky3VDCb6OVf8olA4/copy and fill out using provided example in there.
 
 Important part to have `GROUP` indexes not duplicated and kills indexes as `1,2,3,4,5`. Then you have to validate weapons names. Take the cell from `Helper` sheet. You can either copy cell itself or copy it's validation thing. If you copy cell and start typing it will give you hints. If something doesnt work, then make sure you have United States locale selected in settings.
 
