@@ -1,6 +1,6 @@
 # CS2 Killfeed Thing
 
-Basically this is the package for making killfeed for CS2. It contains demo parser script and After Effects template + script.
+Basically this is the package for making CS2 killfeed. It contains demo parser script and After Effects template + script.
 
 The parser script uses following parser https://github.com/LaihoE/demoparser
 
@@ -8,10 +8,9 @@ In order to use this package you'll need After Effects and [Node.js](https://nod
 
 If some demo doesnt get parsed, then probably demo is corrupted or something wrong with parser, which is unlikely. Nothing I can do about it.
 
-Check video tutorial to understand how it all works:
+Check video tutorial to understand how it all works: https://youtu.be/oeZ95yg7vN4
 
-In script there are 3 options:
-TBD
+In script there are 4 options:
 
 1. Parse frags from demos
 
@@ -92,8 +91,7 @@ Check video tutorial to understand how it works and why you may or may not need 
 
 # After Effects Killfeed Template with script
 
-Video tutorial:
-TBD
+Video tutorial: https://youtu.be/oeZ95yg7vN4
 
 1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
 
