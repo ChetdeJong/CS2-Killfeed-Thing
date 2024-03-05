@@ -93,15 +93,18 @@ Check video tutorial to understand how it works and why you may or may not need 
 
 Video tutorial: https://youtu.be/oeZ95yg7vN4
 
+If you want to use only After Effects template, here's how:
+https://youtu.be/rHzbCbOgMj8
+
 1. Check `allow scripts to write files` in `edit > preferences > scripting & expressions`, otherwise script won't work.
 
 2. Import `CS2-KIllfeed-v2.aep` into project.
 
 3. Take out `CS2-KIllfeed` folder into root of your project.
 
-4. Copy spreadsheet https://docs.google.com/spreadsheets/d/1BZdVUo386uld1ZBmGNzcN43C-Auky3VDCb6OVf8olA4 and fill out using provided example in there.
+4. Copy spreadsheet https://docs.google.com/spreadsheets/d/1BZdVUo386uld1ZBmGNzcN43C-Auky3VDCb6OVf8olA4/copy and fill out using provided example in there.
 
-Important part to have `GROUP` indexes not duplicated and kills indexes as `1,2,3,4,5`. Then you have to validate weapons names. Take the cell from `Helper` sheet. You can either copy cell itself or copy it's validation thing. If you copy cell and start typing it will give you hints. If something doesnt work, then make sure you have United States locale selected in settings.
+Important part to have `GROUP` indexes not duplicated and kills indexes as `1,2,3,4,5,6,7,8,9,10`. Then you have to validate weapons names. Take the cell from `Helper` sheet. You can either copy cell itself or copy it's validation thing. If you copy cell and start typing it will give you hints. If something doesnt work, then make sure you have United States locale selected in settings.
 
 5. Export as csv and name as `killfeed` and `cuts` accordingly.
 

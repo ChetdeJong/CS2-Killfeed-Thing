@@ -1,6 +1,6 @@
 {
 	"name": "cs2-killfeed-thing",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Parse demos for frags and get formatted output for killfeed template",
 	"scripts": {
 		"start": "tsc & node ./dist/main.js",
