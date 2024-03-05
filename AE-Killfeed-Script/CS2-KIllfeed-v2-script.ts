@@ -1,4 +1,4 @@
-const version = '2.2.0';
+const version = '2.3.0';
 
 const weapons = [
 	'glock',
@@ -116,7 +116,7 @@ function setDeathnotice(comp: CompItem, row: row) {
 }
 
 function resetDeathnotices(comp: CompItem) {
-	for (let i = 1; i < 6; i++) {
+	for (let i = 1; i < 11; i++) {
 		const layer = comp.layer(i.toString());
 		layer.enabled = false;
 	}
@@ -208,7 +208,7 @@ function mainEntry() {
 						resetDeathnotices(comp);
 						continue;
 					}
-					if (Number(row[0]) < 1 || Number(row[0]) > 5) continue;
+					if (Number(row[0]) < 1 || Number(row[0]) > 10) continue;
 					const isEmpty = [];
 					for (let j = 1; j < row.length - 1; j++) {
 						if (!row[j] || row[j] === '' || row[j] === undefined) isEmpty.push(j);
@@ -254,7 +254,7 @@ function mainEntry() {
 							`${error.description}\n` +
 							`${error.toString()}\n` +
 							error.toSource(),
-						'Uncaught error in Render function\nCheck log.txt'
+						'Uncaught error in Render function\nCheck log.txt which is located next to project file.'
 					);
 				} else {
 					alert(error);
@@ -572,7 +572,7 @@ function mainEntry() {
 							`${error.description}\n` +
 							`${error.toString()}\n` +
 							error.toSource(),
-						'Uncaught error in Cuts function\nCheck log.txt'
+						'Uncaught error in Cuts function\nCheck log.txt which is located next to project file'
 					);
 				} else {
 					alert(error);
@@ -693,8 +693,8 @@ function mainEntry() {
 						continue;
 					}
 
-					if (Number(row[0]) < 1 || Number(row[0]) > 5) {
-						skippedLines.push('Row is out of range 1 to 5\n' + row.join(', '));
+					if (Number(row[0]) < 1 || Number(row[0]) > 10) {
+						skippedLines.push('Row is out of range 1 to 10\n' + row.join(', '));
 						continue;
 					}
 
@@ -702,7 +702,7 @@ function mainEntry() {
 					let isFound = false;
 					for (let j = 0; j < files.length; j++) {
 						const filename = (files as FootageItem[])[j].name.split('.')[0];
-						const fragindex = filename.substr(filename.length - 1, 1);
+						const fragindex = filename.split('_').pop();
 						const fragnum = filename.split('_')[0];
 
 						if (fragnum === localfragnum && fragindex === localindex) {
@@ -798,7 +798,7 @@ function mainEntry() {
 							`${error.description}\n` +
 							`${error.toString()}\n` +
 							error.toSource(),
-						'Uncaught error in Place function\nCheck log.txt'
+						'Uncaught error in Place function\nCheck log.txt which is located next to project file.'
 					);
 				} else {
 					alert(error);
@@ -815,7 +815,7 @@ function mainEntry() {
 					`${error.description}\n` +
 					`${error.toString()}\n` +
 					error.toSource(),
-				'Uncaught error in Main function\nCheck log.txt'
+				'Uncaught error in Main function\nCheck log.txt which is located next to project file.'
 			);
 		} else {
 			alert(error);
