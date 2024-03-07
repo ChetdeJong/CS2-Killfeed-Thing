@@ -265,6 +265,8 @@ export const getFormattedKills = (
 		}
 		if (!playerKills || playerKills.length === 0) continue;
 
+		playerKills.sort((a, b) => a.tick - b.tick);
+
 		const kills = playerKills.map((kill) => [
 			path.basename(demo).split('.')[0],
 			kill.attacker_steamid,
