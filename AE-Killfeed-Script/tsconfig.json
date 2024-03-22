@@ -6,6 +6,9 @@
 		"checkJs": false,
 		"ignoreDeprecations": "5.0",
 		"strict": false,
-		"types": ["./types/22.0/index.d.ts", "./types/shared/global.d.ts"]
+		"types": [
+			"./node_modules/types-for-adobe/AfterEffects/22.0/index.d.ts",
+			"./node_modules/types-for-adobe/shared/global.d.ts"
+		]
 	}
 }

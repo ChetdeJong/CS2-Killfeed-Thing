@@ -1,5 +1,12 @@
 const version = '2.3.0';
 
+declare class WindowExtended extends Window {
+	update(): void;
+}
+declare class LayerExtended extends Layer {
+	essentialProperty(name: string): AnyProperty;
+}
+
 const weapons = [
 	'glock',
 	'usp_silencer_off',
@@ -109,8 +116,8 @@ function findIndex(arr: string[], target: string) {
 function setDeathnotice(comp: CompItem, row: row) {
 	const layer = comp.layer(row.index);
 	const layer_mask = comp.layer(`${row.index}_mask`);
-	setLayerProperties(layer, row);
-	setLayerProperties(layer_mask, row);
+	setLayerProperties(layer as LayerExtended, row);
+	setLayerProperties(layer_mask as LayerExtended, row);
 	layer.enabled = true;
 	saveDeathnotice(comp, row.name);
 }
@@ -122,7 +129,7 @@ function resetDeathnotices(comp: CompItem) {
 	}
 }
 
-function setLayerProperties(layer: Layer, row: any) {
+function setLayerProperties(layer: LayerExtended, row: any) {
 	layer.essentialProperty('Attacker name').setValue(row.attacker);
 	layer.essentialProperty('Victim name').setValue(row.victim);
 	layer.essentialProperty('Attacker color').setValue(row.attacker_side);
@@ -261,10 +268,11 @@ function mainEntry() {
 				}
 			}
 		}
+
 		const win = new Window('dialog', `CS2 Killfeed Script v${version}`, undefined, {
 			resizeable: false,
 			closeButton: false
-		});
+		}) as WindowExtended;
 
 		win.preferredSize.width = 400;
 		win.preferredSize.height = 300;
@@ -328,7 +336,9 @@ function mainEntry() {
 		// WIN
 		// ===
 
-		var tpanel1 = main.add('tabbedpanel', undefined, undefined, { name: 'tpanel1' });
+		var tpanel1 = main.add('tabbedpanel', undefined, undefined, {
+			name: 'tpanel1'
+		}) as TabbedPanel & { alignChildren: string; margins: number };
 		tpanel1.alignChildren = 'fill';
 		tpanel1.margins = 0;
 
@@ -745,7 +755,11 @@ function mainEntry() {
 				precomp_mask.name = 'killfeed_precomp_mask';
 				precomp_mask.moveAfter((activecomp as CompItem).layer(2));
 
-				precomp_mask('Effects').addProperty('Matte Choker');
+				(
+					precomp_mask('Effects') as _PropertyClasses & {
+						addProperty(name: string): _PropertyClasses;
+					}
+				).addProperty('Matte Choker');
 				(
 					precomp_mask('Effects')
 						.property('Matte Choker')
@@ -774,11 +788,17 @@ function mainEntry() {
 					(activecomp as CompItem).width,
 					(activecomp as CompItem).height,
 					1
-				);
+				) as AVLayer & {
+					setTrackMatte(layer: Layer, trackMatteType: TrackMatteType): void;
+				};
 
 				adjustment.adjustmentLayer = true;
 
-				adjustment('Effects').addProperty('Gaussian Blur');
+				(
+					adjustment('Effects') as _PropertyClasses & {
+						addProperty(name: string): _PropertyClasses;
+					}
+				).addProperty('Gaussian Blur');
 
 				(
 					adjustment('Effects')
