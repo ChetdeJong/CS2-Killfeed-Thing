@@ -17,40 +17,101 @@ const askForDemos = async (): Promise<string> => {
 
 	let startingindex: number;
 	return new Promise((resolve) => {
-		console.clear();
-		rl.question('Enter starting index:', (answer) => {
-			startingindex = parseInt(answer);
-			if (isNaN(Number(startingindex)) || startingindex <= 0) {
-				startingindex = 1;
-			}
-			console.log('Starting index:', startingindex);
-			console.log('Paste frags data line by line in following format:');
-			console.log('');
-			console.log('demoname    steamid    tick');
-			console.log('');
-			console.log('Note, there these are separated by tabs.');
-			console.log('Separate groups by empty line.');
-			console.log('');
-			console.log('Example:');
-			console.log(
-				'faze-vs-g2-m1-inferno    76561197998926770    141134\nfaze-vs-g2-m1-inferno    76561197998926770    141282\nfaze-vs-g2-m1-inferno    76561197998926770    141373'
-			);
-			console.log('');
-			console.log(
-				'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801    165597'
-			);
-			console.log('');
-			console.log('When done type "run" on new line and press enter');
-			console.log('');
-		});
+		const opt = () =>
+			rl.question('Use groups as is? y or n \nDefault is n\n\n', (answer) => {
+				if (answer === 'n' || answer === '') {
+					console.clear();
+					n();
+					return;
+				}
+				if (answer !== 'y' && answer !== 'n') {
+					console.log('Invalid answer: type y or n');
+					opt();
+				}
+				if (answer === 'y') {
+					console.clear();
+					y();
+				}
+			});
 
-		rl.on('line', (line) => {
-			if (line === 'run') {
-				const res = getKillfeed(lines.join('\n'), startingindex);
-				res ? resolve(res) : resolve('');
-			}
-			lines.push(line);
-		});
+		console.clear();
+		opt();
+
+		const y = () => {
+			rl.question('Enter starting index:', (answer) => {
+				startingindex = parseInt(answer);
+				if (isNaN(Number(startingindex)) || startingindex <= 0) {
+					startingindex = 1;
+				}
+				console.log('Starting index:', startingindex);
+				console.log('Paste frags data line by line in following format:');
+				console.log('');
+				console.log('demoname    steamid    tick');
+				console.log('');
+				console.log('Note, there these are separated by tabs.');
+				console.log('Separate groups by empty line.');
+				console.log('When done type "run" on new line and press enter');
+				console.log('');
+
+				console.log('Example:');
+				console.log('');
+				console.log(
+					'spirit-vs-falcons-m1-anubis	76561198386265483	184277\nspirit-vs-falcons-m1-anubis	76561198995880877	184834\nspirit-vs-falcons-m1-anubis	76561199063238565	185508\nspirit-vs-falcons-m1-anubis	76561197989423065	186176\nspirit-vs-falcons-m1-anubis	76561197989423065	186208\nspirit-vs-falcons-m1-anubis	76561198386265483	186515'
+				);
+				console.log('');
+				console.log('Note: in this mode frags will be interpreted as is.');
+				console.log(
+					'It means killfeed data will be returned as exactly as frags data provided.'
+				);
+				console.log('');
+			});
+
+			rl.on('line', (line) => {
+				if (line === 'run') {
+					console.clear();
+					const res = getKillfeed(lines.join('\n'), startingindex, true);
+					res ? resolve(res) : resolve('');
+				}
+				lines.push(line);
+			});
+		};
+
+		const n = () => {
+			rl.question('Enter starting index:', (answer) => {
+				startingindex = parseInt(answer);
+				if (isNaN(Number(startingindex)) || startingindex <= 0) {
+					startingindex = 1;
+				}
+				console.log('Starting index:', startingindex);
+				console.log('Paste frags data line by line in following format:');
+				console.log('');
+				console.log('demoname    steamid    tick');
+				console.log('');
+				console.log('Note, there these are separated by tabs.');
+				console.log('Separate groups by empty line.');
+				console.log('');
+				console.log('Example:');
+				console.log(
+					'faze-vs-g2-m1-inferno    76561197998926770    141134\nfaze-vs-g2-m1-inferno    76561197998926770    141282\nfaze-vs-g2-m1-inferno    76561197998926770    141373'
+				);
+				console.log('');
+				console.log(
+					'faze-vs-g2-m2-ancient    76561198074762801    162312\nfaze-vs-g2-m2-ancient    76561198074762801    164096\nfaze-vs-g2-m2-ancient    76561198074762801    165597'
+				);
+				console.log('');
+				console.log('When done type "run" on new line and press enter');
+				console.log('');
+			});
+
+			rl.on('line', (line) => {
+				if (line === 'run') {
+					console.clear();
+					const res = getKillfeed(lines.join('\n'), startingindex);
+					res ? resolve(res) : resolve('');
+				}
+				lines.push(line);
+			});
+		};
 	});
 };
 

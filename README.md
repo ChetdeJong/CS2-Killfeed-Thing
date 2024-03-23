@@ -40,6 +40,14 @@ It will generate `.csv` file which is formatted with tabs. Means you can copy pa
 
 ## 2) Get frags for killfeed template
 
+**Update: 23 march 2024**
+
+> Now there is new option to get killfeed exactly as each group provided. Might be useful e.g. if you want to treat group as one round. The input format is the same, it's just different type of output.
+
+It will prompt if you want to use groups as is or if you want the default behaviour.
+
+Default:
+
 Provide starting index (optional).
 
 Provide demos data in following format. You can copy paste output from first function for ease of use.

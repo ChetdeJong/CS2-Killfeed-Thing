@@ -148,6 +148,30 @@ export const mostCommonWeapon = (values: string[]) => {
 	return mostCommonItem.toLowerCase();
 };
 
+export const getOneFrag = (tick: number, steamId: string, kills: player_death[], index: number) => {
+	const filteredKills = kills
+		.filter((kill) => kill.attacker_steamid === steamId)
+		.filter((kill) => kill.tick >= tick)
+		.slice(0, 1);
+
+	if (filteredKills.length === 0) return null;
+	const formattedKills = formatKills(filteredKills);
+
+	const weapon = filteredKills.map((kill) =>
+		kill.weapon.trim().replace(/\s/g, '').toLowerCase()
+	)[0];
+
+	formattedKills.unshift([
+		'GROUP',
+		`${index.toString()}`,
+		`${filteredKills[0].attacker_name}-${
+			filteredKills.length
+		}k-${weapon}-vs-${filteredKills[0].user_team_clan_name.trim().replace(/\s/g, '')}`
+	]);
+
+	return formattedKills;
+};
+
 export const getFrag = (values: string, kills: player_death[], index: number) => {
 	const inputArray = values.split('-');
 	const providedtick = parseInt(inputArray[0]);
@@ -192,7 +216,6 @@ export const saveToCSV = (data: string) => {
 			console.clear();
 			console.error('An error occurred:', err);
 		} else {
-			console.clear();
 			console.log(`Saved to ${current_date}.csv`);
 		}
 	});
@@ -286,3 +309,7 @@ export const getFormattedKills = (
 
 	return frags.map((frag) => frag.join('\t')).join('\n');
 };
+
+export function isNotNull<T>(value: T | null): value is T {
+	return value !== null;
+}
