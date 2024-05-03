@@ -1,4 +1,4 @@
-const version = '2.3.0';
+const version = '2.4.0';
 
 declare class WindowExtended extends Window {
 	update(): void;
@@ -99,6 +99,7 @@ interface row {
 	noscope: string;
 	smoke: string;
 	blind: string;
+	inair: string
 	frame: string | undefined;
 }
 
@@ -129,7 +130,7 @@ function resetDeathnotices(comp: CompItem) {
 	}
 }
 
-function setLayerProperties(layer: LayerExtended, row: any) {
+function setLayerProperties(layer: LayerExtended, row: row) {
 	layer.essentialProperty('Attacker name').setValue(row.attacker);
 	layer.essentialProperty('Victim name').setValue(row.victim);
 	layer.essentialProperty('Attacker color').setValue(row.attacker_side);
@@ -140,6 +141,7 @@ function setLayerProperties(layer: LayerExtended, row: any) {
 	layer.essentialProperty('noscope').setValue(row.noscope);
 	layer.essentialProperty('smoke-kill').setValue(row.smoke);
 	layer.essentialProperty('blind').setValue(row.blind);
+	layer.essentialProperty('inair').setValue(row.inair);
 }
 
 function saveDeathnotice(comp: CompItem, name) {
@@ -244,7 +246,8 @@ function mainEntry() {
 						noscope: row[8] === 'TRUE' ? '1' : '0',
 						smoke: row[9] === 'TRUE' ? '1' : '0',
 						blind: row[10] === 'TRUE' ? '1' : '0',
-						frame: row[11]
+						inair: row[11] === 'TRUE' ? '1' : '0',
+						frame: row[12]
 					};
 					setDeathnotice(comp, rowObj);
 				}
@@ -651,8 +654,8 @@ function mainEntry() {
 					const row = rows[i].split(',');
 					const nextRow = rows[i + 1] ? rows[i + 1].split(',') : null;
 					if (row[0] === 'GROUP') {
-						if (nextRow && (nextRow[11] !== '' || nextRow[11] !== undefined)) {
-							const frames = getFrames(nextRow[11], fps);
+						if (nextRow && (nextRow[12] !== '' || nextRow[12] !== undefined)) {
+							const frames = getFrames(nextRow[12], fps);
 							if (frames === null) {
 								skippedLines.push('Cant parse timecode:' + row.join(', '));
 								continue;
@@ -664,11 +667,11 @@ function mainEntry() {
 							continue;
 						}
 					}
-					if (row[11] === '' || row[11] === undefined || row[11] === null) {
+					if (row[12] === '' || row[12] === undefined || row[12] === null) {
 						skippedLines.push('No timecode for marker:\n' + row.join(', '));
 						continue;
 					}
-					const frames = getFrames(row[11], fps);
+					const frames = getFrames(row[12], fps);
 					if (frames === null) {
 						skippedLines.push('Cant parse timecode:' + row.join(', '));
 						continue;
@@ -679,8 +682,8 @@ function mainEntry() {
 				}
 
 				const sortedRows = filteredRows.sort((a, b) => {
-					const rA = a[11];
-					const rB = b[11];
+					const rA = a[12];
+					const rB = b[12];
 					return parseInt(rA) - parseInt(rB);
 				});
 
@@ -698,7 +701,7 @@ function mainEntry() {
 						continue;
 					}
 
-					if (row[11] === undefined || row[11] === '') {
+					if (row[12] === undefined || row[12] === '') {
 						skippedLines.push('No timecode for marker:\n' + row.join(', '));
 						continue;
 					}
@@ -720,12 +723,12 @@ function mainEntry() {
 							const layer = (activecomp as CompItem).layers.add(
 								(files as FootageItem[])[j]
 							);
-							layer.startTime = parseInt(row[11]) / fps;
+							layer.startTime = parseInt(row[12]) / fps;
 
 							layers.push(layer);
 
 							if (prevlayer) {
-								(prevlayer as Layer).outPoint = parseInt(row[11]) / fps;
+								(prevlayer as Layer).outPoint = parseInt(row[12]) / fps;
 							}
 							prevlayer = layer;
 							break;
