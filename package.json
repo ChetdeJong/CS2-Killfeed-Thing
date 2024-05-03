@@ -1,6 +1,6 @@
 {
 	"name": "cs2-killfeed-thing",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Parse demos for frags and get formatted output for killfeed template",
 	"scripts": {
 		"start": "tsc & node ./dist/main.js",
@@ -9,18 +9,18 @@
 	"author": "ChetdeJong",
 	"license": "MIT",
 	"devDependencies": {
-		"@types/node": "^20.11.16",
+		"@types/node": "^20.12.8",
 		"copy-webpack-plugin": "^12.0.2",
 		"node-loader": "^2.0.0",
 		"remove-files-webpack-plugin": "^1.5.0",
 		"ts-loader": "^9.5.1",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.3.3",
-		"webpack": "^5.90.1",
+		"typescript": "^5.4.5",
+		"webpack": "^5.91.0",
 		"webpack-cli": "^5.1.4",
 		"zip-webpack-plugin": "^4.0.1"
 	},
 	"dependencies": {
-		"@laihoe/demoparser2": "^0.22.5"
+		"@laihoe/demoparser2": "^0.24.0"
 	}
 }
