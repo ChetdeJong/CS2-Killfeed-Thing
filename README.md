@@ -36,7 +36,7 @@ Some folder
 Run start.bat and follow instructions.
 You can select player by steamid, select which frags to include ,select which demos to parse
 
-It will generate `.csv` file which is formatted with tabs. Means you can copy paste in to spreadsheet and everything will be in separte cells.
+It will generate `.tsv` file which is formatted with tabs. Means you can copy paste in to spreadsheet and everything will be in separte cells.
 
 ## 2) Get frags for killfeed template
 
@@ -79,7 +79,7 @@ Otherwise separate into different groups (separate by empty line).
 Use right click to paste in terminal.
 When done press enter to get on new line and then type `run` and enter again to get killfeed data.
 
-It will generate `.csv` formatted with tabs, which you can paste to spreadsheet to use with AE killfeed template script.
+It will generate `.tsv` formatted with tabs, which you can paste to spreadsheet to use with AE killfeed template script.
 
 ## 3) Get steam ids
 
@@ -87,7 +87,7 @@ Same as previous, just follow instructions. It will give you steam ids of player
 
 ## 4) Get in and out points
 
-You have to provide timecodes in foloowing format:
+You have to provide timecodes in following format:
 
 ```
 timecode	description
