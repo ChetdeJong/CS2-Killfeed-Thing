@@ -4,3 +4,4 @@ dist
 demos
 build
 *.csv
+*.tsv

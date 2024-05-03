@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { getKillfeed, getPlayers } from './parser';
-import { formatInAndOutPoints, getFormattedKills, saveToCSV } from './utils';
+import { formatInAndOutPoints, getFormattedKills, saveToTSV } from './utils';
 const packageJson = require('../package.json');
 
 export const rootdir = './';
@@ -277,7 +277,7 @@ const menu = () => {
 						);
 						if (parsed !== '') {
 							res.push(parsed);
-							saveToCSV(res.join('\n'));
+							saveToTSV(res.join('\n'));
 						}
 					} else {
 						selected.forEach((demo) => {
@@ -293,7 +293,7 @@ const menu = () => {
 							}
 						});
 						if (res.length > 1) {
-							saveToCSV(res.join('\n'));
+							saveToTSV(res.join('\n'));
 						} else {
 							console.log('No frags found');
 						}
@@ -304,7 +304,7 @@ const menu = () => {
 					checkDemos();
 					const res = await askForDemos();
 					if (res !== '') {
-						saveToCSV(res);
+						saveToTSV(res);
 					} else {
 						console.log('No frags found');
 					}
@@ -331,7 +331,7 @@ const menu = () => {
 				if (answer === '4') {
 					const res = await askForTimecodes();
 					if (res) {
-						saveToCSV(res);
+						saveToTSV(res);
 					} else {
 						console.log('Couldnt parse timecodes');
 					}

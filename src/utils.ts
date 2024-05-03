@@ -205,7 +205,7 @@ export const getFrag = (values: string, kills: player_death[], index: number) =>
 	return formattedKills;
 };
 
-export const saveToCSV = (data: string) => {
+export const saveToTSV = (data: string) => {
 	const date = new Date();
 	const current_date = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
 		2,
@@ -214,12 +214,12 @@ export const saveToCSV = (data: string) => {
 		2,
 		'0'
 	)}-${String(date.getMinutes()).padStart(2, '0')}-${String(date.getSeconds()).padStart(2, '0')}`;
-	fs.writeFile(`${current_date}.csv`, data, (err) => {
+	fs.writeFile(`${current_date}.tsv`, data, (err) => {
 		if (err) {
 			console.clear();
 			console.error('An error occurred:', err);
 		} else {
-			console.log(`Saved to ${current_date}.csv`);
+			console.log(`Saved to ${current_date}.tsv`);
 		}
 	});
 };
