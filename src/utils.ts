@@ -1,8 +1,8 @@
 import { parseHeader } from '@laihoe/demoparser2';
-import { getKills } from './parser';
-import { player_death, header } from './types';
 import fs from 'fs';
 import path from 'path';
+import { getKills } from './parser';
+import { header, player_death } from './types';
 
 function getFrames(timecode: string, fps: number = 30) {
 	try {
@@ -126,7 +126,8 @@ export const formatKills = (kills: player_death[]) => {
 			kill.penetrated === 0 ? 'FALSE' : 'TRUE',
 			kill.noscope ? 'TRUE' : 'FALSE',
 			kill.thrusmoke ? 'TRUE' : 'FALSE',
-			kill.attackerblind ? 'TRUE' : 'FALSE'
+			kill.attackerblind ? 'TRUE' : 'FALSE',
+			kill.attackerinair ? 'TRUE' : 'FALSE'
 		]);
 	});
 	return out;
@@ -191,12 +192,14 @@ export const getFrag = (values: string, kills: player_death[], index: number) =>
 	);
 	const weapon = mostCommonWeapon(weapons);
 
+	const teamName = filteredKills[0].user_team_clan_name ? filteredKills[0].user_team_clan_name.trim().replace(/\s/g, '') : 'NOTEAM'
+
 	formattedKills.unshift([
 		'GROUP',
 		`${index.toString()}`,
 		`${filteredKills[0].attacker_name}-${
 			filteredKills.length
-		}k-${weapon}-vs-${filteredKills[0].user_team_clan_name.trim().replace(/\s/g, '')}`
+		}k-${weapon}-vs-${teamName}`
 	]);
 
 	return formattedKills;

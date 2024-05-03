@@ -46,6 +46,7 @@ export type player_death = {
 	weapon_itemid: string;
 	weapon_originalowner_xuid: string;
 	wipe: number;
+	attackerinair: boolean
 };
 
 export type header = {

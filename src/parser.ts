@@ -1,8 +1,8 @@
 import { parseEvent, parsePlayerInfo } from '@laihoe/demoparser2';
-import { player_death, playerinfo } from './types';
-import { formatKills, getFrag, isNotNull } from './utils';
 import path from 'path';
 import { rootdir } from './main';
+import { player_death, playerinfo } from './types';
+import { formatKills, getFrag, isNotNull } from './utils';
 
 export const getKills = (file: string) => {
 	try {
