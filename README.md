@@ -2,6 +2,12 @@
 
 Basically this is the package for making CS2 killfeed. It contains demo parser script and After Effects template + script.
 
+**Update: 7 january 2025** 
+> You can also now generate killfeed without After Effects at https://killfeed.chetdejong.com/
+> 
+> Can be used with spreadsheet too, but slight adjustments are needed due different format.
+
+
 The parser script uses following parser https://github.com/LaihoE/demoparser
 
 In order to use this package you'll need After Effects and [Node.js](https://nodejs.org/en/download/current) installed. Also Node.js has to be added to `PATH`.
